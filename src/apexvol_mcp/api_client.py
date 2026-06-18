@@ -13,6 +13,13 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
+# Client version, sent on every request as X-ApexVol-Client so the server can
+# warn/refuse outdated installs after a breaking API change.
+try:
+    from apexvol_mcp import __version__ as CLIENT_VERSION
+except Exception:
+    CLIENT_VERSION = "0"
+
 # Default timeout for API requests (seconds)
 # Theta Data API calls can take 30-60 seconds for complex queries
 DEFAULT_TIMEOUT = 120.0
@@ -42,7 +49,8 @@ class ApexVolClient:
         return {
             'Authorization': f'Bearer {self.token}',
             'Content-Type': 'application/json',
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            'X-ApexVol-Client': CLIENT_VERSION,
         }
 
     async def _handle_response(self, response: httpx.Response) -> Dict[str, Any]:

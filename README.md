@@ -296,6 +296,25 @@ After configuration, restart Claude Code or Claude Desktop to load the MCP serve
 - "Show me stocks with high IV rank"
 - "What earnings are coming up this week?"
 
+## Agent Skill
+
+The repo ships an [Agent Skill](skills/options-analysis/SKILL.md) that
+teaches an AI assistant how to combine these tools into complete analyses —
+rich/cheap volatility assessment, earnings setups, premium-selling screens,
+GEX regime reads, and strategy stress-testing — with interpretation
+thresholds and error handling.
+
+To use it with Claude Code, copy the skill into your skills directory:
+
+```bash
+mkdir -p ~/.claude/skills/options-analysis
+curl -o ~/.claude/skills/options-analysis/SKILL.md \
+  https://raw.githubusercontent.com/ryansilk/apexvol-mcp/main/skills/options-analysis/SKILL.md
+```
+
+Claude then loads it automatically whenever an options-analysis question
+comes up (the MCP server itself must also be connected).
+
 ## Response Format
 
 All tools return structured data with a markdown summary:

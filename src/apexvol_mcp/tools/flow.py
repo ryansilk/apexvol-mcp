@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from mcp.server.fastmcp import FastMCP
 
 from ..api_client import get_client, ApexVolAPIError
+from ._annotations import read_only
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 def register_tools(mcp: FastMCP):
     """Register flow tools with the MCP server."""
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Options Flow'))
     async def get_options_flow(ticker: str) -> dict:
         """
         Analyze options flow and unusual activity for a ticker.
@@ -69,7 +70,7 @@ def register_tools(mcp: FastMCP):
             logger.error(f"Error getting flow: {e}")
             return {"success": False, "error": str(e)}
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Smart Money Flow'))
     async def get_smart_money_flow(ticker: str) -> dict:
         """
         Identify institutional/smart money options trades.
@@ -110,7 +111,7 @@ def register_tools(mcp: FastMCP):
             logger.error(f"Error getting smart money flow: {e}")
             return {"success": False, "error": str(e)}
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Volatility Arbitrage Scan'))
     async def scan_volatility_arb() -> dict:
         """
         Scan for cross-index volatility arbitrage opportunities.

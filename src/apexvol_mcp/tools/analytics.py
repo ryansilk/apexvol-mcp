@@ -15,6 +15,7 @@ from datetime import datetime, timezone
 from mcp.server.fastmcp import FastMCP
 
 from ..api_client import get_client, ApexVolAPIError
+from ._annotations import read_only
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +70,7 @@ def _scalar_summary(title: str, data: dict, max_rows: int = 14) -> str:
 def register_tools(mcp: FastMCP):
     """Register consolidated analytics tools with the MCP server."""
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Ticker Analytics'))
     async def get_ticker_analytics(
         ticker: str,
         analysis: str,
@@ -141,7 +142,7 @@ def register_tools(mcp: FastMCP):
             logger.error(f"Error getting {key} analytics: {e}")
             return {"success": False, "error": str(e)}
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Earnings Move Analysis'))
     async def get_earnings_move_analysis(
         ticker: str,
         analysis: str = "mispricing",
@@ -203,7 +204,7 @@ def register_tools(mcp: FastMCP):
 
 
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Ticker Search'))
     async def search_tickers(query: str, limit: int = 8) -> dict:
         """
         Search or validate tickers against the platform's coverage universe.
@@ -238,7 +239,7 @@ def register_tools(mcp: FastMCP):
             logger.error(f"Error searching tickers: {e}")
             return {"success": False, "error": str(e)}
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Relative Value Scan'))
     async def scan_relative_value(
         view: str = "mean_reversion",
         limit: int = 20,
@@ -277,7 +278,7 @@ def register_tools(mcp: FastMCP):
             logger.error(f"Error scanning relative value: {e}")
             return {"success": False, "error": str(e)}
 
-    @mcp.tool()
+    @mcp.tool(**read_only('ORATS Core Data'))
     async def get_orats_cores(
         ticker: str,
         fields: str = ""
@@ -321,7 +322,7 @@ def register_tools(mcp: FastMCP):
             logger.error(f"Error getting cores: {e}")
             return {"success": False, "error": str(e)}
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Max Pain'))
     async def get_max_pain(
         ticker: str,
         expiration: Optional[str] = None
@@ -362,7 +363,7 @@ def register_tools(mcp: FastMCP):
             logger.error(f"Error getting max pain: {e}")
             return {"success": False, "error": str(e)}
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Volume Profile'))
     async def get_volume_profile(
         ticker: str,
         expiration: Optional[str] = None
@@ -402,7 +403,7 @@ def register_tools(mcp: FastMCP):
             logger.error(f"Error getting volume profile: {e}")
             return {"success": False, "error": str(e)}
 
-    @mcp.tool()
+    @mcp.tool(**read_only('0DTE Analytics'))
     async def get_zero_dte(ticker: str) -> dict:
         """
         Get 0DTE (same-day expiration) analytics for a ticker.

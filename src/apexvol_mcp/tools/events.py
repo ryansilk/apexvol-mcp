@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 from mcp.server.fastmcp import FastMCP
 
 from ..api_client import get_client, ApexVolAPIError
+from ._annotations import read_only
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ logger = logging.getLogger(__name__)
 def register_tools(mcp: FastMCP):
     """Register events and screening tools with the MCP server."""
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Earnings Calendar'))
     async def get_earnings_calendar(
         days_ahead: int = 7,
         min_market_cap: Optional[float] = None
@@ -88,7 +89,7 @@ def register_tools(mcp: FastMCP):
             logger.error(f"Error getting earnings calendar: {e}")
             return {"success": False, "error": str(e)}
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Earnings History'))
     async def analyze_earnings_history(ticker: str) -> dict:
         """
         Analyze historical earnings moves for a stock.
@@ -158,7 +159,7 @@ def register_tools(mcp: FastMCP):
             logger.error(f"Error analyzing earnings history: {e}")
             return {"success": False, "error": str(e)}
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Market Screener'))
     async def screen_market(
         screen_type: str = "high_iv_rank",
         limit: int = 20,
@@ -255,7 +256,7 @@ def register_tools(mcp: FastMCP):
             logger.error(f"Error running screen: {e}")
             return {"success": False, "error": str(e)}
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Market Overview'))
     async def get_market_overview() -> dict:
         """
         Get market-wide volatility overview.
@@ -332,7 +333,7 @@ def register_tools(mcp: FastMCP):
             logger.error(f"Error getting market overview: {e}")
             return {"success": False, "error": str(e)}
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Economic Calendar'))
     async def get_economic_calendar(
         from_date: str = "",
         to_date: str = ""

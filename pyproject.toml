@@ -1,6 +1,6 @@
 [project]
 name = "apexvol-mcp"
-version = "0.1.1"
+version = "0.1.2"
 description = "MCP server for ApexVol options analytics - query options data via Claude Code or Claude Desktop"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -25,8 +25,9 @@ classifiers = [
 ]
 
 dependencies = [
+    # >=1.10: first version where @mcp.tool() takes title/annotations (tools/_annotations.py)
     # <2.0: the 2.0 SDK removed mcp.server.fastmcp, which server.py imports
-    "mcp>=1.2.0,<2.0",
+    "mcp>=1.10.0,<2.0",
     "httpx>=0.25.0",
     "python-dotenv>=1.0.0",
 ]

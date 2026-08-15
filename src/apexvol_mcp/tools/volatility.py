@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 from mcp.server.fastmcp import FastMCP
 
 from ..api_client import get_client, ApexVolAPIError
+from ._annotations import read_only
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ logger = logging.getLogger(__name__)
 def register_tools(mcp: FastMCP):
     """Register volatility tools with the MCP server."""
 
-    @mcp.tool()
+    @mcp.tool(**read_only('IV Rank'))
     async def get_iv_rank(
         ticker: str,
         lookback_days: int = 252
@@ -87,7 +88,7 @@ def register_tools(mcp: FastMCP):
             logger.error(f"Error getting IV rank: {e}")
             return {"success": False, "error": str(e)}
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Volatility Cone'))
     async def get_volatility_cone(
         ticker: str,
         periods: Optional[str] = None
@@ -136,7 +137,7 @@ def register_tools(mcp: FastMCP):
             logger.error(f"Error getting volatility cone: {e}")
             return {"success": False, "error": str(e)}
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Volatility Risk Premium'))
     async def get_volatility_risk_premium(
         ticker: str,
         lookback_days: int = 30,
@@ -228,7 +229,7 @@ def register_tools(mcp: FastMCP):
             logger.error(f"Error getting VRP: {e}")
             return {"success": False, "error": str(e)}
 
-    @mcp.tool()
+    @mcp.tool(**read_only('IV Term Structure'))
     async def get_term_structure(ticker: str) -> dict:
         """
         Get IV term structure across all expirations.
@@ -267,7 +268,7 @@ def register_tools(mcp: FastMCP):
             logger.error(f"Error getting term structure: {e}")
             return {"success": False, "error": str(e)}
 
-    @mcp.tool()
+    @mcp.tool(**read_only('IV Opportunities'))
     async def find_iv_opportunities(
         ticker: str,
         z_score_threshold: float = 2.0
@@ -336,7 +337,7 @@ def register_tools(mcp: FastMCP):
             return {"success": False, "error": str(e)}
 
 
-    @mcp.tool()
+    @mcp.tool(**read_only('VIX Snapshot'))
     async def get_vix_snapshot() -> dict:
         """
         Get the current VIX snapshot: level, change, and term-structure state.
@@ -368,7 +369,7 @@ def register_tools(mcp: FastMCP):
             logger.error(f"Error getting VIX snapshot: {e}")
             return {"success": False, "error": str(e)}
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Volatility Surface'))
     async def get_monies_surface(
         ticker: str,
         surface: str = "implied"

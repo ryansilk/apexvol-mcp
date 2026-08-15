@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 from mcp.server.fastmcp import FastMCP
 
 from ..api_client import get_client, ApexVolAPIError
+from ._annotations import read_only
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ logger = logging.getLogger(__name__)
 def register_tools(mcp: FastMCP):
     """Register chain tools with the MCP server."""
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Options Chain'))
     async def get_options_chain(
         ticker: str,
         expiration: Optional[str] = None,
@@ -75,7 +76,7 @@ def register_tools(mcp: FastMCP):
             logger.error(f"Error getting options chain: {e}")
             return {"success": False, "error": str(e)}
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Expiration Dates'))
     async def get_expirations(ticker: str) -> dict:
         """
         Get available expiration dates for a ticker.
@@ -117,7 +118,7 @@ def register_tools(mcp: FastMCP):
             logger.error(f"Error getting expirations: {e}")
             return {"success": False, "error": str(e)}
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Options by Delta'))
     async def get_options_by_delta(
         ticker: str,
         target_delta: float = 0.30,
@@ -170,7 +171,7 @@ def register_tools(mcp: FastMCP):
             logger.error(f"Error getting options by delta: {e}")
             return {"success": False, "error": str(e)}
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Stock Price'))
     async def get_stock_price(ticker: str) -> dict:
         """
         Get current stock price and company information.
@@ -209,7 +210,7 @@ def register_tools(mcp: FastMCP):
             logger.error(f"Error getting stock price: {e}")
             return {"success": False, "error": str(e)}
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Expected Move'))
     async def calculate_expected_move(
         ticker: str,
         expiration: Optional[str] = None
@@ -260,7 +261,7 @@ def register_tools(mcp: FastMCP):
             return {"success": False, "error": str(e)}
 
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Historical Options Chain'))
     async def get_historical_chain(
         ticker: str,
         expiration: str,

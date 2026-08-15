@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 from mcp.server.fastmcp import FastMCP
 
 from ..api_client import get_client, ApexVolAPIError
+from ._annotations import read_only
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ logger = logging.getLogger(__name__)
 def register_tools(mcp: FastMCP):
     """Register strategy tools with the MCP server."""
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Strategy Builder'))
     async def build_strategy(
         ticker: str,
         strategy_type: str,
@@ -91,7 +92,7 @@ def register_tools(mcp: FastMCP):
             logger.error(f"Error building strategy: {e}")
             return {"success": False, "error": str(e)}
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Strategy Analyzer'))
     async def analyze_strategy(
         ticker: str,
         legs: str
@@ -147,7 +148,7 @@ def register_tools(mcp: FastMCP):
             logger.error(f"Error analyzing strategy: {e}")
             return {"success": False, "error": str(e)}
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Strike Optimizer'))
     async def optimize_strategy(
         ticker: str,
         strategy_type: str,
@@ -210,7 +211,7 @@ def register_tools(mcp: FastMCP):
             return {"success": False, "error": str(e)}
 
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Chain Simulator'))
     async def simulate_option_chain(
         ticker: str,
         sim_price: float,
@@ -268,7 +269,7 @@ def register_tools(mcp: FastMCP):
             logger.error(f"Error simulating chain: {e}")
             return {"success": False, "error": str(e)}
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Probability of Profit'))
     async def calculate_probability_of_profit(
         legs: str,
         stock_price: float,

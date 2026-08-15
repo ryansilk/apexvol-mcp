@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 from mcp.server.fastmcp import FastMCP
 
 from ..api_client import get_client, ApexVolAPIError
+from ._annotations import read_only
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ logger = logging.getLogger(__name__)
 def register_tools(mcp: FastMCP):
     """Register Greeks tools with the MCP server."""
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Gamma Exposure (GEX)'))
     async def get_gex(
         ticker: str,
         expiration: Optional[str] = None,
@@ -84,7 +85,7 @@ def register_tools(mcp: FastMCP):
             logger.error(f"Error getting GEX: {e}")
             return {"success": False, "error": str(e)}
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Charm Exposure'))
     async def get_charm_exposure(
         ticker: str,
         expiration: Optional[str] = None
@@ -136,7 +137,7 @@ Total Charm: {result.get('total_charm', 0):,.0f}
             logger.error(f"Error getting charm: {e}")
             return {"success": False, "error": str(e)}
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Third-Order Greeks'))
     async def get_third_order_greeks(
         ticker: str,
         expiration: Optional[str] = None
@@ -194,7 +195,7 @@ Total Charm: {result.get('total_charm', 0):,.0f}
             logger.error(f"Error getting third-order Greeks: {e}")
             return {"success": False, "error": str(e)}
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Greeks Heatmap'))
     async def get_greeks_heatmap(
         ticker: str,
         greek: str = "delta",
@@ -251,7 +252,7 @@ Showing {greek} values across strikes and expirations.
             logger.error(f"Error getting Greeks heatmap: {e}")
             return {"success": False, "error": str(e)}
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Cross-Index GEX'))
     async def get_cross_index_gex(
         tickers: Optional[str] = None
     ) -> dict:

@@ -22,6 +22,7 @@ from datetime import datetime, timezone
 from mcp.server.fastmcp import FastMCP
 
 from ..api_client import get_client, ApexVolAPIError
+from ._annotations import read_only
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +78,7 @@ def _parse_positions(positions_str: str) -> tuple:
 def register_tools(mcp: FastMCP):
     """Register risk management tools with the MCP server."""
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Portfolio Greeks'))
     async def calculate_portfolio_greeks(positions: str) -> dict:
         """
         Calculate aggregate Greeks for a portfolio of positions.
@@ -129,7 +130,7 @@ def register_tools(mcp: FastMCP):
             logger.error(f"Error calculating portfolio Greeks: {e}")
             return {"success": False, "error": str(e)}
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Scenario Analysis'))
     async def run_scenario_analysis(
         positions: str,
         stock_move_pct: float = 0,
@@ -197,7 +198,7 @@ def register_tools(mcp: FastMCP):
             logger.error(f"Error running scenario: {e}")
             return {"success": False, "error": str(e)}
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Stress Tests'))
     async def generate_stress_tests(positions: str) -> dict:
         """
         Run stress test scenarios on a portfolio.
@@ -244,7 +245,7 @@ def register_tools(mcp: FastMCP):
             logger.error(f"Error generating stress tests: {e}")
             return {"success": False, "error": str(e)}
 
-    @mcp.tool()
+    @mcp.tool(**read_only('Hedge Recommendations'))
     async def get_hedge_recommendations(
         positions: str,
         hedge_ticker: str = "SPY",

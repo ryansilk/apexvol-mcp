@@ -1,0 +1,35 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
+  "name": "io.github.ryansilk/apexvol-mcp",
+  "description": "Options analytics for AI assistants: chains, IV rank, VRP, Greeks, GEX, expected moves, screeners.",
+  "repository": {
+    "url": "https://github.com/ryansilk/apexvol-mcp",
+    "source": "github"
+  },
+  "version": "0.1.1",
+  "packages": [
+    {
+      "registry_type": "pypi",
+      "registry_base_url": "https://pypi.org",
+      "identifier": "apexvol-mcp",
+      "version": "0.1.1",
+      "transport": {
+        "type": "stdio"
+      },
+      "environment_variables": [
+        {
+          "name": "APEXVOL_API_TOKEN",
+          "description": "ApexVol API token (avmcp_...), self-served at apexvol.com/account under API Access on any paid plan",
+          "is_required": true,
+          "is_secret": true
+        }
+      ]
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://apexvol.com/mcp-server"
+    }
+  ]
+}

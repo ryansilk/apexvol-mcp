@@ -7,7 +7,7 @@ Uses REST API calls to ApexVol platform.
 
 import logging
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 from mcp.server.fastmcp import FastMCP
 
@@ -77,7 +77,7 @@ def register_tools(mcp: FastMCP):
                 "data": {"earnings": earnings},
                 "summary": "\n".join(summary_lines),
                 "metadata": {
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                     "days_ahead": days_ahead,
                     "count": len(earnings)
                 }
@@ -147,7 +147,7 @@ def register_tools(mcp: FastMCP):
                 "data": result,
                 "summary": "\n".join(summary_lines),
                 "metadata": {
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                     "ticker": ticker,
                     "quarters_analyzed": len(history)
                 }
@@ -161,20 +161,27 @@ def register_tools(mcp: FastMCP):
     @mcp.tool()
     async def screen_market(
         screen_type: str = "high_iv_rank",
-        limit: int = 20
+        limit: int = 20,
+        min_market_cap: float = 0,
+        exclude_earnings_days: int = 0
     ) -> dict:
         """
         Screen the market for trading opportunities.
 
-        Run predefined screens to find stocks matching specific criteria.
+        Preset screens run against the full ~6,000-ticker universe using bulk
+        data (cheap on quota). Pass screen_type="list" to fetch the catalog.
 
         Screen types:
-        - high_iv_rank: Stocks with elevated IV (selling opportunities)
-        - low_iv_rank: Stocks with depressed IV (buying opportunities)
-        - high_gex: Stocks with positive gamma exposure
-        - negative_gex: Stocks with negative gamma exposure
-        - unusual_volume: Stocks with unusual options volume
-        - earnings_this_week: Stocks reporting earnings soon
+        - high_iv_rank / low_iv_rank: elevated or depressed IV vs 1-year range
+        - high_vrp: IV rich vs realized — premium-selling edge
+        - earnings_this_week: reporting in the next 7 days
+        - high_skew: elevated put skew (hedging demand / fear)
+        - steep_contango: large front-to-back IV spread (calendar spreads)
+        - mean_reversion: IV/SPY ratio stretched vs its 1-year average
+        - vol_pairs: rich-vs-cheap ticker pairs vs SPY
+        - decorrelation: low-beta diversifiers
+        - unusual_volume: options volume far above 20-day average
+        - pin_risk: spot pinned near a large-OI strike into expiration
 
         Use this tool when the user asks about:
         - Finding trading opportunities
@@ -183,8 +190,10 @@ def register_tools(mcp: FastMCP):
         - What to trade
 
         Args:
-            screen_type: Type of screen to run
+            screen_type: Screen name from the list above (or "list" for the catalog)
             limit: Maximum results to return (default 20)
+            min_market_cap: Minimum market cap in dollars (0 = server default $1B)
+            exclude_earnings_days: Skip tickers reporting within N days (0 = keep all)
 
         Returns:
             Stocks matching the screen criteria
@@ -195,6 +204,10 @@ def register_tools(mcp: FastMCP):
                 'screen_type': screen_type,
                 'limit': limit
             }
+            if min_market_cap:
+                params['min_market_cap'] = min_market_cap
+            if exclude_earnings_days:
+                params['exclude_earnings_days'] = exclude_earnings_days
 
             result = await client.get("/screen", params=params)
 
@@ -231,7 +244,7 @@ def register_tools(mcp: FastMCP):
                 "data": result,
                 "summary": "\n".join(summary_lines),
                 "metadata": {
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                     "screen_type": screen_type,
                     "count": len(results)
                 }
@@ -310,11 +323,52 @@ def register_tools(mcp: FastMCP):
                 "data": result,
                 "summary": "\n".join(summary_lines),
                 "metadata": {
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 }
             }
         except ApexVolAPIError as e:
             return {"success": False, "error": e.message}
         except Exception as e:
             logger.error(f"Error getting market overview: {e}")
+            return {"success": False, "error": str(e)}
+
+    @mcp.tool()
+    async def get_economic_calendar(
+        from_date: str = "",
+        to_date: str = ""
+    ) -> dict:
+        """
+        Get the macro economic-event calendar (CPI, FOMC, jobs reports...).
+
+        Use this tool when the user asks about:
+        - Upcoming macro events or data releases
+        - When the next CPI/FOMC/NFP is
+        - Event risk beyond earnings
+
+        Args:
+            from_date: Start date YYYY-MM-DD (default today)
+            to_date: End date YYYY-MM-DD (default ~1 week out)
+
+        Returns:
+            Economic events with dates and importance
+        """
+        try:
+            client = get_client()
+            params = {}
+            if from_date:
+                params['from_date'] = from_date
+            if to_date:
+                params['to_date'] = to_date
+            result = await client.get("/economic-calendar", params=params or None)
+            events = result.get('events', result if isinstance(result, list) else [])
+            return {
+                "success": True,
+                "data": result,
+                "summary": f"## Economic calendar — {len(events)} events (see data)",
+                "metadata": {"timestamp": datetime.now(timezone.utc).isoformat()}
+            }
+        except ApexVolAPIError as e:
+            return {"success": False, "error": e.message}
+        except Exception as e:
+            logger.error(f"Error getting economic calendar: {e}")
             return {"success": False, "error": str(e)}

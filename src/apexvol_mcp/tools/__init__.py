@@ -9,6 +9,9 @@ Tool modules for options analytics:
 - strategy: Strategy building and optimization
 - risk: Portfolio Greeks, scenarios, hedging
 - events: Earnings, screening, market overview
+- analytics: Consolidated per-ticker analytics (skew, dividends, borrow,
+  correlation, HV regimes, price context, relative value, Greeks exposure,
+  earnings-move studies, max pain, volume profile, 0DTE)
 """
 
 from . import chain
@@ -18,5 +21,6 @@ from . import flow
 from . import strategy
 from . import risk
 from . import events
+from . import analytics
 
-__all__ = ['chain', 'volatility', 'greeks', 'flow', 'strategy', 'risk', 'events']
+__all__ = ['chain', 'volatility', 'greeks', 'flow', 'strategy', 'risk', 'events', 'analytics']

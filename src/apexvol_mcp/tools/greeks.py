@@ -7,7 +7,7 @@ Uses REST API calls to ApexVol platform.
 
 import logging
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 from mcp.server.fastmcp import FastMCP
 
@@ -74,7 +74,7 @@ def register_tools(mcp: FastMCP):
 - Max Put GEX: {result.get('max_put_gex_strike', 'N/A')}
 """,
                 "metadata": {
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                     "aggregated": aggregate
                 }
             }
@@ -127,7 +127,7 @@ means significant hedging adjustments as expiration approaches.
 Total Charm: {result.get('total_charm', 0):,.0f}
 """,
                 "metadata": {
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 }
             }
         except ApexVolAPIError as e:
@@ -185,7 +185,7 @@ Total Charm: {result.get('total_charm', 0):,.0f}
 | Ultima | Vomma sensitivity to vol |
 """,
                 "metadata": {
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 }
             }
         except ApexVolAPIError as e:
@@ -240,7 +240,7 @@ Showing {greek} values across strikes and expirations.
 **Stock Price**: ${result.get('stock_price', 0):.2f}
 """,
                 "metadata": {
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                     "greek": greek,
                     "option_type": option_type
                 }
@@ -301,7 +301,7 @@ Showing {greek} values across strikes and expirations.
                 "data": result,
                 "summary": "\n".join(summary_lines),
                 "metadata": {
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                     "tickers": ticker_list
                 }
             }

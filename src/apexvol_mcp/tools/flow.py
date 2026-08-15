@@ -6,7 +6,7 @@ Uses REST API calls to ApexVol platform.
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 from mcp.server.fastmcp import FastMCP
 
@@ -61,7 +61,7 @@ def register_tools(mcp: FastMCP):
 
 **Unusual Activity**: {len(result.get('unusual_activity', []))} trades flagged
 """,
-                "metadata": {"timestamp": datetime.utcnow().isoformat()}
+                "metadata": {"timestamp": datetime.now(timezone.utc).isoformat()}
             }
         except ApexVolAPIError as e:
             return {"success": False, "error": e.message}
@@ -102,7 +102,7 @@ def register_tools(mcp: FastMCP):
 **Total Premium**: ${result.get('total_premium', 0):,.0f}
 **Sentiment**: {result.get('sentiment', 'Neutral')}
 """,
-                "metadata": {"timestamp": datetime.utcnow().isoformat()}
+                "metadata": {"timestamp": datetime.now(timezone.utc).isoformat()}
             }
         except ApexVolAPIError as e:
             return {"success": False, "error": e.message}
@@ -142,7 +142,7 @@ def register_tools(mcp: FastMCP):
 
 Top opportunities are ranked by z-score deviation from historical relationships.
 """,
-                "metadata": {"timestamp": datetime.utcnow().isoformat()}
+                "metadata": {"timestamp": datetime.now(timezone.utc).isoformat()}
             }
         except ApexVolAPIError as e:
             return {"success": False, "error": e.message}

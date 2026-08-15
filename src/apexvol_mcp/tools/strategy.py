@@ -7,7 +7,7 @@ Uses REST API calls to ApexVol platform.
 
 import logging
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 from mcp.server.fastmcp import FastMCP
 
@@ -83,7 +83,7 @@ def register_tools(mcp: FastMCP):
 ### Legs
 {_format_legs(legs)}
 """,
-                "metadata": {"timestamp": datetime.utcnow().isoformat()}
+                "metadata": {"timestamp": datetime.now(timezone.utc).isoformat()}
             }
         except ApexVolAPIError as e:
             return {"success": False, "error": e.message}
@@ -139,7 +139,7 @@ def register_tools(mcp: FastMCP):
 **Max Loss**: ${result.get('max_loss', 0):.2f}
 **P.O.P.**: {result.get('probability_of_profit', 0):.1f}%
 """,
-                "metadata": {"timestamp": datetime.utcnow().isoformat()}
+                "metadata": {"timestamp": datetime.now(timezone.utc).isoformat()}
             }
         except ApexVolAPIError as e:
             return {"success": False, "error": e.message}
@@ -201,12 +201,122 @@ def register_tools(mcp: FastMCP):
 **Max Loss**: ${analysis.get('max_loss', 0):.2f}
 **Risk/Reward**: {analysis.get('risk_reward_ratio', 0):.2f}
 """,
-                "metadata": {"timestamp": datetime.utcnow().isoformat()}
+                "metadata": {"timestamp": datetime.now(timezone.utc).isoformat()}
             }
         except ApexVolAPIError as e:
             return {"success": False, "error": e.message}
         except Exception as e:
             logger.error(f"Error optimizing strategy: {e}")
+            return {"success": False, "error": str(e)}
+
+
+    @mcp.tool()
+    async def simulate_option_chain(
+        ticker: str,
+        sim_price: float,
+        sim_dte: float,
+        iv_adjustment: float = 0,
+        expiration: str = ""
+    ) -> dict:
+        """
+        Re-price an options chain at a hypothetical stock price, DTE, and IV shift.
+
+        Black-Scholes "what-if" for the whole chain: what would these options
+        be worth if the stock were at X, with Y days left, and IV up/down Z%?
+
+        Use this tool when the user asks about:
+        - What an option would be worth if the stock moves
+        - How theta decay reshapes the chain over time
+        - IV crush / IV spike what-ifs
+
+        Args:
+            ticker: Stock symbol (server fetches the current chain)
+            sim_price: Hypothetical stock price
+            sim_dte: Days to expiration to simulate (0 = at expiry)
+            iv_adjustment: IV shift in percent, -50 to +50 (e.g. -30 for IV crush)
+            expiration: Expiration date YYYY-MM-DD (default: nearest)
+
+        Returns:
+            The re-priced chain with Greeks at the simulated conditions
+        """
+        try:
+            client = get_client()
+            payload = {
+                'ticker': ticker.upper(),
+                'sim_price': sim_price,
+                'sim_dte': sim_dte,
+                'iv_adjustment': iv_adjustment,
+            }
+            if expiration:
+                payload['expiration'] = expiration
+
+            result = await client.post("/simulate-chain", data=payload)
+
+            return {
+                "success": True,
+                "data": result,
+                "summary": (
+                    f"## {ticker.upper()} simulated chain\n\n"
+                    f"Stock at ${sim_price:g}, {sim_dte:g} DTE, IV {iv_adjustment:+g}% — "
+                    f"{len(result.get('chain', []))} strikes re-priced (see data)."
+                ),
+                "metadata": {"timestamp": datetime.now(timezone.utc).isoformat()}
+            }
+        except ApexVolAPIError as e:
+            return {"success": False, "error": e.message}
+        except Exception as e:
+            logger.error(f"Error simulating chain: {e}")
+            return {"success": False, "error": str(e)}
+
+    @mcp.tool()
+    async def calculate_probability_of_profit(
+        legs: str,
+        stock_price: float,
+        days_to_exp: int
+    ) -> dict:
+        """
+        Calculate the probability of profit for a set of option legs.
+
+        Uses N(d2)-based probabilities on the combined position payoff.
+
+        Use this tool when the user asks about:
+        - Probability of profit / PoP for a trade
+        - Odds a spread or condor expires profitable
+
+        Args:
+            legs: JSON array of legs, e.g.
+                '[{"option_type": "put", "action": "sell", "strike": 95, "iv": 32.5, "premium": 1.20, "quantity": 1}]'
+                (iv accepts percent or decimal; premium is per share)
+            stock_price: Current stock price
+            days_to_exp: Days to expiration
+
+        Returns:
+            Probability of profit percentage
+        """
+        try:
+            import json as _json
+            client = get_client()
+            parsed_legs = _json.loads(legs)
+            if isinstance(parsed_legs, dict):
+                parsed_legs = [parsed_legs]
+
+            result = await client.post("/pop", data={
+                'legs': parsed_legs,
+                'stock_price': stock_price,
+                'days_to_exp': days_to_exp,
+            })
+
+            pop = result.get('probability_of_profit', 0)
+            return {
+                "success": True,
+                "data": result,
+                "summary": f"**Probability of profit**: {pop:.1f}% ({result.get('legs_count', 0)} legs, {days_to_exp} DTE)",
+                "metadata": {"timestamp": datetime.now(timezone.utc).isoformat()}
+            }
+        except ApexVolAPIError as e:
+            return {"success": False, "error": e.message}
+        except Exception as e:
+            logger.error(f"Error calculating PoP: {e}")
             return {"success": False, "error": str(e)}
 
 

@@ -7,7 +7,7 @@ Uses REST API calls to ApexVol platform.
 
 import logging
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 
 from mcp.server.fastmcp import FastMCP
 
@@ -77,7 +77,7 @@ def register_tools(mcp: FastMCP):
 **Assessment**: {assessment}
 """,
                 "metadata": {
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                     "lookback_days": lookback_days
                 }
             }
@@ -126,7 +126,7 @@ def register_tools(mcp: FastMCP):
                 "data": result,
                 "summary": _format_vol_cone(ticker, result),
                 "metadata": {
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                     "periods": periods or "10,20,30,60,90"
                 }
             }
@@ -139,7 +139,8 @@ def register_tools(mcp: FastMCP):
     @mcp.tool()
     async def get_volatility_risk_premium(
         ticker: str,
-        lookback_days: int = 30
+        lookback_days: int = 30,
+        view: str = "current"
     ) -> dict:
         """
         Calculate the volatility risk premium (IV minus realized volatility).
@@ -158,17 +159,41 @@ def register_tools(mcp: FastMCP):
         Args:
             ticker: Stock symbol
             lookback_days: Days for realized vol calculation (default 30)
+            view: "current" (snapshot), "timeseries" (IV vs HV through time),
+                or "by_expiration" (VRP per expiration)
 
         Returns:
             VRP data with assessment and strategy recommendation
         """
         try:
             client = get_client()
+
+            view_key = view.strip().lower()
+            if view_key == 'timeseries':
+                result = await client.get(f"/vrp/{ticker.upper()}/timeseries")
+                return {
+                    "success": True,
+                    "data": result,
+                    "summary": f"## {ticker.upper()} IV vs HV time series — see data",
+                    "metadata": {"timestamp": datetime.now(timezone.utc).isoformat(), "view": view_key}
+                }
+            if view_key == 'by_expiration':
+                result = await client.get(f"/vrp/{ticker.upper()}/expirations")
+                return {
+                    "success": True,
+                    "data": result,
+                    "summary": f"## {ticker.upper()} VRP by expiration — see data",
+                    "metadata": {"timestamp": datetime.now(timezone.utc).isoformat(), "view": view_key}
+                }
+
             params = {'lookback_days': lookback_days}
             result = await client.get(f"/vrp/{ticker.upper()}", params=params)
 
-            vrp = result.get('vrp', 0)
-            if vrp > 5:
+            # All values are percentage points (see iv_units in the payload)
+            vrp = result.get('volatility_risk_premium', 0) or 0
+            if result.get('assessment'):
+                assessment = result['assessment']
+            elif vrp > 5:
                 assessment = "HIGH VRP - Strong edge for premium sellers"
             elif vrp > 0:
                 assessment = "POSITIVE VRP - Slight edge for sellers"
@@ -184,14 +209,16 @@ def register_tools(mcp: FastMCP):
 
 | Metric | Value |
 |--------|-------|
-| Implied Volatility | {result.get('iv', 0)*100:.1f}% |
-| Realized Volatility ({lookback_days}d) | {result.get('rv', 0)*100:.1f}% |
+| Implied Volatility | {result.get('implied_volatility', 0):.1f}% |
+| Realized Volatility ({lookback_days}d) | {result.get('realized_volatility', 0):.1f}% |
 | **VRP** | **{vrp:+.1f}%** |
+| VRP Ratio (IV/RV) | {result.get('vrp_ratio', 0):.2f} |
+| VRP Percentile | {result.get('vrp_percentile', 0):.0f}% |
 
 **Assessment**: {assessment}
 """,
                 "metadata": {
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                     "lookback_days": lookback_days
                 }
             }
@@ -231,7 +258,7 @@ def register_tools(mcp: FastMCP):
                 "data": result,
                 "summary": _format_term_structure(ticker, result),
                 "metadata": {
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 }
             }
         except ApexVolAPIError as e:
@@ -287,9 +314,10 @@ def register_tools(mcp: FastMCP):
 
 | Metric | Value |
 |--------|-------|
-| Current IV | {result.get('current_iv', 0)*100:.1f}% |
-| Mean IV | {result.get('mean_iv', 0)*100:.1f}% |
-| Std Dev | {result.get('std_iv', 0)*100:.1f}% |
+| Current IV | {result.get('current_iv', 0):.1f}% |
+| Mean IV | {result.get('mean_iv', 0):.1f}% |
+| Std Dev | {result.get('std_iv', 0):.1f}% |
+| Reversion Target | {result.get('reversion_target', 0):.1f}% |
 | **Z-Score** | **{z_score:.2f}** |
 
 **Opportunity**: {opportunity}
@@ -297,7 +325,7 @@ def register_tools(mcp: FastMCP):
 **Strategy**: {strategy}
 """,
                 "metadata": {
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                     "threshold": z_score_threshold
                 }
             }
@@ -308,30 +336,105 @@ def register_tools(mcp: FastMCP):
             return {"success": False, "error": str(e)}
 
 
+    @mcp.tool()
+    async def get_vix_snapshot() -> dict:
+        """
+        Get the current VIX snapshot: level, change, and term-structure state.
+
+        Use this tool when the user asks about:
+        - The VIX or overall market fear level
+        - Whether index vol is elevated or calm
+        - Vol regime context before a trade
+
+        Returns:
+            VIX level, change, and context
+        """
+        try:
+            client = get_client()
+            result = await client.get("/vix")
+            return {
+                "success": True,
+                "data": result,
+                "summary": (
+                    f"## VIX Snapshot\n\n"
+                    f"**Level**: {result.get('vix_level', result.get('level', 0)):.2f} · "
+                    f"see data for change and term-structure context"
+                ),
+                "metadata": {"timestamp": datetime.now(timezone.utc).isoformat()}
+            }
+        except ApexVolAPIError as e:
+            return {"success": False, "error": e.message}
+        except Exception as e:
+            logger.error(f"Error getting VIX snapshot: {e}")
+            return {"success": False, "error": str(e)}
+
+    @mcp.tool()
+    async def get_monies_surface(
+        ticker: str,
+        surface: str = "implied"
+    ) -> dict:
+        """
+        Get the ORATS monies volatility surface for a ticker.
+
+        - "implied" (default): the market's current smoothed vol surface
+        - "forecast": ORATS's model-forecast surface
+        - "comparison": implied vs forecast side by side — where the model
+          disagrees with the market (potential rich/cheap spots)
+
+        Use this tool when the user asks about:
+        - The vol surface or smoothed IV by delta
+        - Model-vs-market vol disagreement
+        - Where IV looks rich or cheap across the surface
+
+        Args:
+            ticker: Stock symbol
+            surface: "implied", "forecast", or "comparison"
+
+        Returns:
+            Monies surface rows per expiration
+        """
+        try:
+            client = get_client()
+            result = await client.get(f"/monies/{ticker.upper()}", params={'surface': surface})
+            return {
+                "success": True,
+                "data": result,
+                "summary": f"## {ticker.upper()} monies surface ({surface}) — see data",
+                "metadata": {"timestamp": datetime.now(timezone.utc).isoformat()}
+            }
+        except ApexVolAPIError as e:
+            return {"success": False, "error": e.message}
+        except Exception as e:
+            logger.error(f"Error getting monies surface: {e}")
+            return {"success": False, "error": str(e)}
+
+
 def _format_vol_cone(ticker: str, data: dict) -> str:
-    """Format volatility cone data as markdown."""
+    """Format volatility cone data as markdown (values are percentage points)."""
     lines = [
         f"## {ticker.upper()} Volatility Cone",
         "",
-        "| Period | Current RV | Median | 25th | 75th | Percentile |",
-        "|--------|-----------|--------|------|------|------------|",
+        f"**Current IV (30d)**: {data.get('current_iv', 0):.1f}% · "
+        f"**Current RV (30d)**: {data.get('realized_vol_30d', 0):.1f}%",
+        "",
+        "| Period | Current RV | Median RV | 25th | 75th | Min–Max |",
+        "|--------|-----------|-----------|------|------|---------|",
     ]
 
-    cone_data = data.get('cone', {})
-    for period, values in cone_data.items():
+    for row in data.get('volatility_cone', []):
         lines.append(
-            f"| {period}d | {values.get('current', 0)*100:.1f}% | "
-            f"{values.get('median', 0)*100:.1f}% | "
-            f"{values.get('p25', 0)*100:.1f}% | "
-            f"{values.get('p75', 0)*100:.1f}% | "
-            f"{values.get('percentile', 0):.0f}% |"
+            f"| {row.get('period', '?')}d | {row.get('current_rv', 0):.1f}% | "
+            f"{row.get('median_rv', 0):.1f}% | "
+            f"{row.get('p25', 0):.1f}% | "
+            f"{row.get('p75', 0):.1f}% | "
+            f"{row.get('min', 0):.1f}–{row.get('max', 0):.1f}% |"
         )
 
     return "\n".join(lines)
 
 
 def _format_term_structure(ticker: str, data: dict) -> str:
-    """Format term structure data as markdown."""
+    """Format term structure data as markdown (ATM IV is percentage points)."""
     lines = [
         f"## {ticker.upper()} Term Structure",
         "",
@@ -343,7 +446,7 @@ def _format_term_structure(ticker: str, data: dict) -> str:
     for item in term_data[:8]:  # Limit to 8 expirations
         lines.append(
             f"| {item.get('expiration', 'N/A')} | "
-            f"{item.get('atm_iv', 0)*100:.1f}% | "
+            f"{item.get('atm_iv', 0):.1f}% | "
             f"{item.get('dte', 0)} |"
         )
 

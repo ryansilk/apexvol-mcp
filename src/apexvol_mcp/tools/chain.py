@@ -7,7 +7,7 @@ Uses REST API calls to ApexVol platform.
 
 import logging
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 from mcp.server.fastmcp import FastMCP
 
@@ -22,13 +22,16 @@ def register_tools(mcp: FastMCP):
     @mcp.tool()
     async def get_options_chain(
         ticker: str,
-        expiration: Optional[str] = None
+        expiration: Optional[str] = None,
+        num_expirations: int = 1,
+        strikes_around: int = 20
     ) -> dict:
         """
-        Get the full options chain for a ticker.
+        Get the options chain for a ticker.
 
         Returns calls and puts with all Greeks, IV, volume, and open interest
-        for each strike across expirations.
+        per strike. Defaults to the nearest expiration and the 20 strikes each
+        side of the money — widen only when the analysis genuinely needs it.
 
         Use this tool when the user asks about:
         - Options prices for a stock
@@ -38,7 +41,9 @@ def register_tools(mcp: FastMCP):
 
         Args:
             ticker: Stock symbol (e.g., "AAPL", "SPY", "TSLA")
-            expiration: Specific expiration date (YYYY-MM-DD) or None for all
+            expiration: Specific expiration date (YYYY-MM-DD); overrides num_expirations
+            num_expirations: How many of the nearest expirations to include (1-10)
+            strikes_around: Strikes per side of the money to keep (0 = full chain)
 
         Returns:
             Options chain data with calls, puts, and metadata
@@ -48,6 +53,10 @@ def register_tools(mcp: FastMCP):
             params = {}
             if expiration:
                 params['expiration'] = expiration
+            if num_expirations != 1:
+                params['num_expirations'] = num_expirations
+            if strikes_around != 20:
+                params['strikes_around'] = strikes_around
 
             result = await client.get(f"/chain/{ticker.upper()}", params=params if params else None)
 
@@ -56,8 +65,8 @@ def register_tools(mcp: FastMCP):
                 "data": result,
                 "summary": _format_chain_summary(ticker, result),
                 "metadata": {
-                    "timestamp": datetime.utcnow().isoformat(),
-                    "data_source": "ThetaData"
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "data_source": "ORATS"
                 }
             }
         except ApexVolAPIError as e:
@@ -99,7 +108,7 @@ def register_tools(mcp: FastMCP):
                           f"**{len(expirations)} expiration dates available**\n\n"
                           f"Next 5: {', '.join(expirations[:5]) if expirations else 'None'}",
                 "metadata": {
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 }
             }
         except ApexVolAPIError as e:
@@ -151,7 +160,7 @@ def register_tools(mcp: FastMCP):
                 "data": result,
                 "summary": _format_delta_result(ticker, option_type, target_delta, result),
                 "metadata": {
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                     "stock_price": result.get('stock_price', 0)
                 }
             }
@@ -191,7 +200,7 @@ def register_tools(mcp: FastMCP):
                           f"**Bid/Ask**: ${result.get('bid', 0):.2f} / ${result.get('ask', 0):.2f}\n"
                           f"**Sector**: {result.get('sector', 'N/A')}",
                 "metadata": {
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 }
             }
         except ApexVolAPIError as e:
@@ -241,13 +250,61 @@ def register_tools(mcp: FastMCP):
                           f"({result.get('expected_move_percent', 0)*100:.1f}%)\n\n"
                           f"**Range**: ${result.get('lower_bound', 0):.2f} - ${result.get('upper_bound', 0):.2f}",
                 "metadata": {
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 }
             }
         except ApexVolAPIError as e:
             return {"success": False, "error": e.message}
         except Exception as e:
             logger.error(f"Error calculating expected move: {e}")
+            return {"success": False, "error": str(e)}
+
+
+    @mcp.tool()
+    async def get_historical_chain(
+        ticker: str,
+        expiration: str,
+        trade_date: str
+    ) -> dict:
+        """
+        Get the options chain as it looked on a past trading day (EOD snapshot).
+
+        Historical chains go back years — see how an option was priced before
+        an earnings event, through a selloff, or at any point in its life.
+
+        Use this tool when the user asks about:
+        - What an option was trading at on a past date
+        - How a chain looked before/after an event
+        - Backtesting entries against real historical quotes
+
+        Args:
+            ticker: Stock symbol
+            expiration: Expiration date YYYY-MM-DD
+            trade_date: The historical date to snapshot YYYY-MM-DD
+
+        Returns:
+            End-of-day chain snapshot for that date
+        """
+        try:
+            client = get_client()
+            result = await client.get(
+                f"/chain-at-time/{ticker.upper()}",
+                params={'expiration': expiration, 'trade_date': trade_date},
+            )
+
+            return {
+                "success": True,
+                "data": result,
+                "summary": (
+                    f"## {ticker.upper()} chain on {trade_date} (exp {expiration})\n\n"
+                    "End-of-day snapshot — see data for strikes and quotes."
+                ),
+                "metadata": {"timestamp": datetime.now(timezone.utc).isoformat()}
+            }
+        except ApexVolAPIError as e:
+            return {"success": False, "error": e.message}
+        except Exception as e:
+            logger.error(f"Error getting historical chain: {e}")
             return {"success": False, "error": str(e)}
 
 

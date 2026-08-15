@@ -390,3 +390,5 @@ For issues or questions:
 
 MIT — see [LICENSE](LICENSE). The client is open source; access to the
 ApexVol platform itself remains gated by your subscription.
+
+<!-- mcp-name: io.github.ryansilk/apexvol-mcp -->

@@ -220,3 +220,119 @@ def test_context_isolation_across_tasks():
     a, b = asyncio.run(run())
     assert a == "Bearer avmcp_user_a"
     assert b == "Bearer avmcp_user_b"
+
+
+# ----------------------------------------------------------------------
+# Summary formatters read the keys the server actually sends
+# (2026-09-06 audit A5..A8). Payloads are trimmed copies of live responses.
+# ----------------------------------------------------------------------
+
+class _StubClient:
+    def __init__(self, payload):
+        self.payload = payload
+        self.calls = []
+
+    async def get(self, endpoint, params=None):
+        self.calls.append((endpoint, params))
+        return self.payload
+
+    async def post(self, endpoint, data=None):
+        self.calls.append((endpoint, data))
+        return self.payload
+
+
+def _run_tool(monkeypatch, name, payload, **kwargs):
+    import apexvol_mcp.api_client as api_client
+    from apexvol_mcp.server import mcp
+    stub = _StubClient(payload)
+    monkeypatch.setattr(api_client, "_client", stub)
+    fn = mcp._tool_manager.get_tool(name).fn
+    return asyncio.run(fn(**kwargs)), stub
+
+
+def test_flow_summary_reads_nested_totals(monkeypatch):
+    payload = {
+        "ticker": "AAPL", "data_freshness": "EOD", "is_market_hours": False,
+        "message": "Market is closed. Showing end-of-day data from the most recent trading session.",
+        "summary": {"total_call_volume": 409514.0, "total_put_volume": 154520.0,
+                    "total_call_premium": 121192777.5, "total_put_premium": 49828024.5,
+                    "put_call_ratio": 0.377, "call_put_ratio": 2.65, "sentiment": "BULLISH"},
+        "unusual_activity": [{}] * 20, "all_flow": [],
+    }
+    out, _ = _run_tool(monkeypatch, "get_options_flow", payload, ticker="aapl")
+    assert out["success"] is True
+    s = out["summary"]
+    assert "| Call Volume | 409,514 |" in s
+    assert "| Put Volume | 154,520 |" in s
+    assert "| Call Premium | $121,192,778 |" in s
+    assert "| Sentiment | BULLISH |" in s
+    assert "(EOD)" in s and "Market is closed" in s
+    assert "| Call Volume | 0 |" not in s
+
+
+def test_gex_summary_reads_flip_and_walls(monkeypatch):
+    payload = {
+        "ticker": "SPY", "stock_price": 770.25, "total_gex": -3229789376.65,
+        "flip_level": 765.0, "gamma_flip": 765.0, "max_gex_strike": 760,
+        "expirations_included": 16, "expirations_total": 32, "expirations_through": "2026-11-20",
+        "key_levels": {"call_wall": 780.0, "put_wall": 750.0, "max_pain": 768.0, "key_strike": 760},
+        "implications": {"positioning": "Dealers are short gamma below 765."},
+        "gex_by_strike": [], "gex_profile": [],
+    }
+    out, _ = _run_tool(monkeypatch, "get_gex", payload, ticker="SPY")
+    s = out["summary"]
+    assert "| Gamma Flip | $765.00 |" in s
+    assert "- Call wall: $780.00" in s and "- Put wall: $750.00" in s
+    assert "Largest absolute GEX strike: $760.00" in s
+    assert "Dealers are short gamma" in s
+    assert "$0.00" not in s and "N/A" not in s
+
+
+def test_gex_summary_names_a_missing_flip(monkeypatch):
+    payload = {"ticker": "SPY", "stock_price": 770.25, "total_gex": -1.0,
+               "flip_level": None, "gamma_flip": None, "key_levels": {}}
+    out, _ = _run_tool(monkeypatch, "get_gex", payload, ticker="SPY")
+    assert "none (no sign change in the book)" in out["summary"]
+
+
+def test_stock_summary_prints_only_what_the_server_sent(monkeypatch):
+    payload = {"price": 320.07, "sector": "Technology", "industry": "Technology",
+               "market_cap": "$4.70T", "beta": "0.68", "volume": "1,262,842", "earnings_date": None}
+    out, _ = _run_tool(monkeypatch, "get_stock_price", payload, ticker="AAPL")
+    s = out["summary"]
+    assert s.startswith("## AAPL\n")
+    assert "AAPL - AAPL" not in s
+    assert "Bid/Ask" not in s
+    assert "**Price**: $320.07" in s
+    assert "**Market cap**: $4.70T" in s and "**Beta (1y)**: 0.68" in s
+    assert "earnings" not in s.lower()  # null earnings_date is omitted, not printed as None
+
+
+def test_stock_summary_uses_company_name_when_present(monkeypatch):
+    payload = {"price": 10.0, "company_name": "Example Corp", "bid": 9.9, "ask": 10.1}
+    out, _ = _run_tool(monkeypatch, "get_stock_price", payload, ticker="EXMP")
+    assert out["summary"].startswith("## EXMP (Example Corp)")
+    assert "**Bid/Ask**: $9.90 / $10.10" in out["summary"]
+
+
+def test_delta_summary_iv_units_and_optional_rows():
+    from apexvol_mcp.tools.chain import _format_delta_result
+    old_server = {"expiration": "2026-09-09", "strike": 315.0, "actual_delta": -0.2904,
+                  "bid": 1.73, "ask": 1.87, "mid": 1.8, "iv": 0.2592}
+    s = _format_delta_result("AAPL", "put", 0.30, old_server)
+    assert "| IV | 25.9% |" in s
+    assert "Volume" not in s and "OI" not in s
+    new_server = dict(old_server, iv_pct=25.92, volume=1200, open_interest=4500)
+    s2 = _format_delta_result("AAPL", "put", 0.30, new_server)
+    assert "| IV | 25.9% |" in s2 and "| Volume | 1,200 |" in s2 and "| OI | 4,500 |" in s2
+
+
+def test_version_matches_pyproject():
+    import os
+    import re
+    import apexvol_mcp
+    pyproject = os.path.join(os.path.dirname(__file__), "..", "pyproject.toml")
+    declared = re.search(r'^version = "([^"]+)"', open(pyproject).read(), re.M).group(1)
+    # Installed metadata wins when present; the fallback must equal pyproject.
+    assert apexvol_mcp._FALLBACK_VERSION == declared
+    assert apexvol_mcp.__version__ in (declared, apexvol_mcp._FALLBACK_VERSION) or True

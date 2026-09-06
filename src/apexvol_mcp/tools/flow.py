@@ -43,25 +43,43 @@ def register_tools(mcp: FastMCP):
             client = get_client()
             result = await client.get(f"/flow/{ticker.upper()}")
 
-            call_vol = result.get('call_volume', 0)
-            put_vol = result.get('put_volume', 0)
+            # The server nests the totals under 'summary' (total_call_volume,
+            # total_put_volume, total_call_premium, total_put_premium,
+            # put_call_ratio, sentiment). 0.1.0 to 0.1.2 read top-level keys
+            # that never existed and printed zeros above 60 KB of real rows.
+            s = result.get('summary') or {}
+            call_vol = int(s.get('total_call_volume') or 0)
+            put_vol = int(s.get('total_put_volume') or 0)
+            call_prem = float(s.get('total_call_premium') or 0)
+            put_prem = float(s.get('total_put_premium') or 0)
             ratio = call_vol / put_vol if put_vol > 0 else 0
-
-            return {
-                "success": True,
-                "data": result,
-                "summary": f"""## {ticker.upper()} Options Flow
+            sentiment = s.get('sentiment') or 'n/a'
+            freshness = result.get('data_freshness') or ''
+            note = result.get('message') or ''
+            header = f"## {ticker.upper()} Options Flow"
+            if freshness:
+                header += f" ({freshness})"
+            summary = f"""{header}
 
 | Metric | Value |
 |--------|-------|
 | Call Volume | {call_vol:,} |
 | Put Volume | {put_vol:,} |
 | Call/Put Ratio | {ratio:.2f} |
-| Call Premium | ${result.get('call_premium', 0):,.0f} |
-| Put Premium | ${result.get('put_premium', 0):,.0f} |
+| Call Premium | ${call_prem:,.0f} |
+| Put Premium | ${put_prem:,.0f} |
+| Net Premium | ${call_prem - put_prem:,.0f} |
+| Sentiment | {sentiment} |
 
 **Unusual Activity**: {len(result.get('unusual_activity', []))} trades flagged
-""",
+"""
+            if note:
+                summary += f"\n_{note}_\n"
+
+            return {
+                "success": True,
+                "data": result,
+                "summary": summary,
                 "metadata": {"timestamp": datetime.now(timezone.utc).isoformat()}
             }
         except ApexVolAPIError as e:

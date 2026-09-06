@@ -203,6 +203,13 @@ def register_tools(mcp: FastMCP):
             else:
                 assessment = "NEGATIVE VRP - Options may be cheap"
 
+            # vrp_percentile ranks today's VRP within the ticker's own ~1y VRP
+            # history; None when the history is too short to rank against.
+            _pctile = result.get('vrp_percentile')
+            _pctile_row = (
+                f"| VRP Percentile (1y own history) | {_pctile:.0f}% |\n"
+                if _pctile is not None else ""
+            )
             return {
                 "success": True,
                 "data": result,
@@ -214,8 +221,7 @@ def register_tools(mcp: FastMCP):
 | Realized Volatility ({lookback_days}d) | {result.get('realized_volatility', 0):.1f}% |
 | **VRP** | **{vrp:+.1f}%** |
 | VRP Ratio (IV/RV) | {result.get('vrp_ratio', 0):.2f} |
-| VRP Percentile | {result.get('vrp_percentile', 0):.0f}% |
-
+{_pctile_row}
 **Assessment**: {assessment}
 """,
                 "metadata": {
@@ -422,7 +428,11 @@ def _format_vol_cone(ticker: str, data: dict) -> str:
         "|--------|-----------|-----------|------|------|---------|",
     ]
 
-    for row in data.get('volatility_cone', []):
+    # volatility_cone is a dict keyed '10d'/'20d'/... — iterating it directly
+    # yielded its string keys and .get() threw, failing this tool on every call
+    cone = data.get('volatility_cone') or {}
+    rows = sorted(cone.values(), key=lambda r: r.get('period') or 0) if isinstance(cone, dict) else cone
+    for row in rows:
         lines.append(
             f"| {row.get('period', '?')}d | {row.get('current_rv', 0):.1f}% | "
             f"{row.get('median_rv', 0):.1f}% | "

@@ -1,6 +1,6 @@
 [project]
 name = "apexvol-mcp"
-version = "0.1.2"
+version = "0.1.3"
 description = "MCP server for ApexVol options analytics - query options data via Claude Code or Claude Desktop"
 readme = "README.md"
 requires-python = ">=3.10"

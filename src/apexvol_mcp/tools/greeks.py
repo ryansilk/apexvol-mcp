@@ -55,25 +55,46 @@ def register_tools(mcp: FastMCP):
 
             result = await client.get(f"/gex/{ticker.upper()}", params=params)
 
-            total_gex = result.get('total_gex', 0)
-            gex_flip = result.get('gex_flip', 0)
+            # Server keys: flip_level (alias gamma_flip), key_levels.{call_wall,
+            # put_wall, key_strike, max_pain}, max_gex_strike, implications.
+            # 0.1.0 to 0.1.2 read gex_flip / max_call_gex_strike /
+            # max_put_gex_strike, none of which exist, and printed "$0.00" and
+            # "N/A" above a payload that carried every level.
+            total_gex = result.get('total_gex', 0) or 0
+            flip = result.get('flip_level')
+            if flip is None:
+                flip = result.get('gamma_flip')
+            levels = result.get('key_levels') or {}
+            implications = result.get('implications') or {}
             regime = "Positive GEX (Supportive)" if total_gex > 0 else "Negative GEX (Volatile)"
+
+            def _px(v):
+                return f"${v:,.2f}" if isinstance(v, (int, float)) else "n/a"
+
+            flip_txt = _px(flip) if isinstance(flip, (int, float)) else "none (no sign change in the book)"
+            summary = f"""## {ticker.upper()} Gamma Exposure
+
+| Metric | Value |
+|--------|-------|
+| Spot | {_px(result.get('stock_price'))} |
+| Total GEX | {total_gex:,.0f} |
+| Gamma Flip | {flip_txt} |
+| Regime | {regime} |
+| Expirations | {result.get('expirations_included', 'n/a')} of {result.get('expirations_total', 'n/a')} (through {result.get('expirations_through', 'n/a')}) |
+
+**Key Levels**:
+- Call wall: {_px(levels.get('call_wall'))}
+- Put wall: {_px(levels.get('put_wall'))}
+- Largest absolute GEX strike: {_px(result.get('max_gex_strike'))}
+- Max pain: {_px(levels.get('max_pain'))}
+"""
+            if implications.get('positioning'):
+                summary += f"\n{implications['positioning']}\n"
 
             return {
                 "success": True,
                 "data": result,
-                "summary": f"""## {ticker.upper()} Gamma Exposure
-
-| Metric | Value |
-|--------|-------|
-| Total GEX | {total_gex:,.0f} |
-| GEX Flip Point | ${gex_flip:.2f} |
-| Regime | {regime} |
-
-**Key Levels**:
-- Max Call GEX: {result.get('max_call_gex_strike', 'N/A')}
-- Max Put GEX: {result.get('max_put_gex_strike', 'N/A')}
-""",
+                "summary": summary,
                 "metadata": {
                     "timestamp": datetime.now(timezone.utc).isoformat(),
                     "aggregated": aggregate

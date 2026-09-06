@@ -174,14 +174,14 @@ def register_tools(mcp: FastMCP):
     @mcp.tool(**read_only('Stock Price'))
     async def get_stock_price(ticker: str) -> dict:
         """
-        Get current stock price and company information.
+        Get the current stock price and basic company stats.
 
-        Returns the current price, bid/ask, and basic company stats.
+        Returns the price plus sector, market cap, one-year beta and the next
+        earnings date when the feed carries one.
 
         Use this tool when the user asks about:
         - Current stock price
-        - Bid/ask spread
-        - Company information
+        - Company information (sector, market cap, beta, next earnings)
 
         Args:
             ticker: Stock symbol
@@ -193,13 +193,27 @@ def register_tools(mcp: FastMCP):
             client = get_client()
             result = await client.get(f"/stock/{ticker.upper()}")
 
+            # Print only what the server sent. 0.1.0 to 0.1.2 printed
+            # "AAPL - AAPL" and "Bid/Ask: $0.00 / $0.00" because it formatted
+            # keys the endpoint never returned.
+            name = result.get('company_name')
+            title = f"## {ticker.upper()}" + (f" ({name})" if name else "")
+            price = result.get('price')
+            lines = [title, "",
+                     f"**Price**: {'$%.2f' % price if isinstance(price, (int, float)) else 'n/a'}"]
+            bid, ask = result.get('bid'), result.get('ask')
+            if isinstance(bid, (int, float)) and isinstance(ask, (int, float)) and (bid or ask):
+                lines.append(f"**Bid/Ask**: ${bid:.2f} / ${ask:.2f}")
+            for label, key in (("Sector", "sector"), ("Market cap", "market_cap"),
+                               ("Beta (1y)", "beta"), ("Next earnings", "earnings_date")):
+                v = result.get(key)
+                if v not in (None, "", "N/A"):
+                    lines.append(f"**{label}**: {v}")
+
             return {
                 "success": True,
                 "data": result,
-                "summary": f"## {ticker.upper()} - {result.get('company_name', ticker)}\n\n"
-                          f"**Price**: ${result.get('price', 0):.2f}\n"
-                          f"**Bid/Ask**: ${result.get('bid', 0):.2f} / ${result.get('ask', 0):.2f}\n"
-                          f"**Sector**: {result.get('sector', 'N/A')}",
+                "summary": "\n".join(lines),
                 "metadata": {
                     "timestamp": datetime.now(timezone.utc).isoformat()
                 }
@@ -248,7 +262,7 @@ def register_tools(mcp: FastMCP):
                 "summary": f"## {ticker.upper()} Expected Move\n\n"
                           f"**Expiration**: {result.get('expiration', 'N/A')}\n"
                           f"**Expected Move**: ${result.get('expected_move_dollars', 0):.2f} "
-                          f"({result.get('expected_move_percent', 0)*100:.1f}%)\n\n"
+                          f"({result.get('expected_move_percent', 0):.1f}%)\n\n"
                           f"**Range**: ${result.get('lower_bound', 0):.2f} - ${result.get('upper_bound', 0):.2f}",
                 "metadata": {
                     "timestamp": datetime.now(timezone.utc).isoformat()
@@ -332,7 +346,28 @@ def _format_chain_summary(ticker: str, data: dict) -> str:
 
 
 def _format_delta_result(ticker: str, option_type: str, target_delta: float, data: dict) -> str:
-    """Format delta lookup result as markdown."""
+    """Format delta lookup result as markdown.
+
+    IV: prefer the server's iv_pct (percentage points, added 2026-09); older
+    servers send only 'iv' as a decimal (0.2592). Volume and OI rows appear
+    only when the server sends them; 0.1.0 to 0.1.2 printed "Volume 0, OI 0"
+    for keys the endpoint has never returned.
+    """
+    iv_pct = data.get('iv_pct')
+    if not isinstance(iv_pct, (int, float)):
+        iv_raw = data.get('iv') or 0
+        iv_pct = iv_raw * 100 if 0 < iv_raw < 5 else iv_raw
+    rows = [
+        ("Bid", f"${data.get('bid', 0):.2f}"),
+        ("Ask", f"${data.get('ask', 0):.2f}"),
+        ("Mid", f"${data.get('mid', 0):.2f}"),
+        ("IV", f"{iv_pct:.1f}%"),
+    ]
+    if isinstance(data.get('volume'), (int, float)):
+        rows.append(("Volume", f"{int(data['volume']):,}"))
+    if isinstance(data.get('open_interest'), (int, float)):
+        rows.append(("OI", f"{int(data['open_interest']):,}"))
+    table = "\n".join(f"| {k} | {v} |" for k, v in rows)
     return f"""## {ticker.upper()} {target_delta:.2f} Delta {option_type.capitalize()}
 
 **Expiration**: {data.get('expiration', 'N/A')}
@@ -341,10 +376,5 @@ def _format_delta_result(ticker: str, option_type: str, target_delta: float, dat
 
 | Metric | Value |
 |--------|-------|
-| Bid | ${data.get('bid', 0):.2f} |
-| Ask | ${data.get('ask', 0):.2f} |
-| Mid | ${data.get('mid', 0):.2f} |
-| IV | {data.get('iv', 0)*100:.1f}% |
-| Volume | {data.get('volume', 0):,} |
-| OI | {data.get('open_interest', 0):,} |
+{table}
 """

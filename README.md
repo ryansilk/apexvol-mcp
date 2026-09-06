@@ -117,7 +117,7 @@ The local server runs on your machine and calls the ApexVol platform API. The re
 - `get_cross_index_gex` - Compare GEX across indices
 
 ### Options Flow (3 tools)
-- `get_options_flow` - Flow and unusual activity ⚠️ *temporarily unavailable — upstream feed lacks reliable intraday volume; the tool says so instead of returning zeros*
+- `get_options_flow` - Flow and unusual activity (end-of-day figures while the market is closed; answers with an explanation, never zeros, if the volume feed goes quiet)
 - `get_smart_money_flow` - Institutional flow patterns ⚠️ *same limitation as above*
 - `scan_volatility_arb` - Cross-index volatility arbitrage
 

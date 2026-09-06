@@ -92,7 +92,9 @@ def register_tools(mcp: FastMCP):
           "signals", "decomposition", "ex_earnings")
         - "price_context": price action + volatility briefing for orientation
         - "relative_value": is this ticker's vol rich or cheap vs its own history and peers
-        - "greeks_exposure": dealer gamma/delta/vanna/charm exposure by strike
+        - "greeks_exposure": dealer gamma/delta/vanna/charm and third-order exposure by strike,
+          with per-greek key levels (greek_levels), a unit label per greek and, for gamma,
+          the flip, both walls and a positioning sentence
 
         Args:
             ticker: Stock symbol (e.g., "AAPL")

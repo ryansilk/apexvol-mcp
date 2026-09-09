@@ -66,6 +66,12 @@
       "name": "Stock analytics",
       "short": "stock",
       "docs_url": "https://apexvol.com/developers/stock-analytics-api"
+    },
+    {
+      "slug": "account-api",
+      "name": "Account and index",
+      "short": "account",
+      "docs_url": "https://apexvol.com/developers/account-api"
     }
   ],
   "endpoints": [
@@ -945,7 +951,7 @@
     },
     {
       "slug": "index",
-      "family": "options-chain-api",
+      "family": "account-api",
       "method": "GET",
       "path": "/",
       "question": "Which endpoints does the ApexVol API expose, and what does each one need?",
@@ -996,8 +1002,8 @@
       ],
       "since": "1.17",
       "plan": "basic",
-      "docs_url": "https://apexvol.com/developers/options-chain-api/index",
-      "markdown_url": "https://apexvol.com/developers/options-chain-api/index.md",
+      "docs_url": "https://apexvol.com/developers/account-api/index",
+      "markdown_url": "https://apexvol.com/developers/account-api/index.md",
       "errors": [
         [
           401,
@@ -4774,6 +4780,10 @@
         [
           424,
           "no symbol in the batch returned data"
+        ],
+        [
+          404,
+          "a symbol with no listed options; the whole call fails and the body names it"
         ]
       ]
     },
@@ -4883,6 +4893,10 @@
         [
           424,
           "no symbol in the batch returned data"
+        ],
+        [
+          404,
+          "a symbol with no listed options; the whole call fails and the body names it"
         ]
       ]
     },
@@ -4964,12 +4978,16 @@
         [
           424,
           "no symbol in the batch returned data"
+        ],
+        [
+          404,
+          "a symbol with no listed options; the whole call fails and the body names it"
         ]
       ]
     },
     {
       "slug": "me-usage",
-      "family": "options-chain-api",
+      "family": "account-api",
       "method": "GET",
       "path": "/me/usage",
       "question": "How much of my monthly API allowance is left, and which endpoints have I been calling?",
@@ -5012,8 +5030,8 @@
       ],
       "since": "1.19",
       "plan": "basic",
-      "docs_url": "https://apexvol.com/developers/options-chain-api/me-usage",
-      "markdown_url": "https://apexvol.com/developers/options-chain-api/me-usage.md",
+      "docs_url": "https://apexvol.com/developers/account-api/me-usage",
+      "markdown_url": "https://apexvol.com/developers/account-api/me-usage.md",
       "errors": [
         [
           401,

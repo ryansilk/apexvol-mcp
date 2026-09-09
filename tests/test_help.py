@@ -25,7 +25,7 @@ def data():
 
 
 def test_vendored_records_are_complete(data):
-    assert len(data['families']) == 11
+    assert len(data['families']) == 12
     assert len(data['endpoints']) >= 60
     assert len(data['tools']) == 43
     assert data['conventions'] and data['errors'] and data['references']
@@ -118,7 +118,7 @@ def test_search_ranks_name_matches_first(data):
 def test_search_with_no_match_offers_the_families(data):
     out = lookup('zzqx', data)
     assert out['kind'] == 'search' and out['matches'] == []
-    assert len(out['families']) == 11
+    assert len(out['families']) == 12
 
 
 def test_conventions_errors_and_prompts_topics(data):

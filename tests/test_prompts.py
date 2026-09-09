@@ -46,7 +46,10 @@ def test_every_family_has_three_starters():
     for e in load_prompts():
         if e['family'] != 'recipes':
             by_family.setdefault(e['family'], []).append(e)
+    # 12 families in the records; account-api has no tools (the usage and
+    # index endpoints are REST-only), so it carries no starters.
     assert len(by_family) == 11
+    assert 'account-api' not in by_family
     assert all(len(v) == 3 for v in by_family.values()), {k: len(v) for k, v in by_family.items()}
 
 

@@ -1,0 +1,5905 @@
+{
+  "records_updated": "2026-09-08",
+  "families": [
+    {
+      "slug": "implied-volatility-api",
+      "name": "Implied volatility",
+      "short": "vol",
+      "docs_url": "https://apexvol.com/developers/implied-volatility-api"
+    },
+    {
+      "slug": "options-chain-api",
+      "name": "Options chain",
+      "short": "chain",
+      "docs_url": "https://apexvol.com/developers/options-chain-api"
+    },
+    {
+      "slug": "options-greeks-api",
+      "name": "Options Greeks",
+      "short": "greeks",
+      "docs_url": "https://apexvol.com/developers/options-greeks-api"
+    },
+    {
+      "slug": "gamma-exposure-api",
+      "name": "Gamma exposure",
+      "short": "gex",
+      "docs_url": "https://apexvol.com/developers/gamma-exposure-api"
+    },
+    {
+      "slug": "options-flow-api",
+      "name": "Options flow",
+      "short": "flow",
+      "docs_url": "https://apexvol.com/developers/options-flow-api"
+    },
+    {
+      "slug": "earnings-expected-move-api",
+      "name": "Earnings and expected move",
+      "short": "earnings",
+      "docs_url": "https://apexvol.com/developers/earnings-expected-move-api"
+    },
+    {
+      "slug": "strategies-api",
+      "name": "Strategies",
+      "short": "strategy",
+      "docs_url": "https://apexvol.com/developers/strategies-api"
+    },
+    {
+      "slug": "risk-api",
+      "name": "Portfolio risk",
+      "short": "risk",
+      "docs_url": "https://apexvol.com/developers/risk-api"
+    },
+    {
+      "slug": "events-calendar-api",
+      "name": "Events and calendars",
+      "short": "events",
+      "docs_url": "https://apexvol.com/developers/events-calendar-api"
+    },
+    {
+      "slug": "screeners-api",
+      "name": "Screeners",
+      "short": "screen",
+      "docs_url": "https://apexvol.com/developers/screeners-api"
+    },
+    {
+      "slug": "stock-analytics-api",
+      "name": "Stock analytics",
+      "short": "stock",
+      "docs_url": "https://apexvol.com/developers/stock-analytics-api"
+    }
+  ],
+  "endpoints": [
+    {
+      "slug": "hv-regimes",
+      "family": "implied-volatility-api",
+      "method": "GET",
+      "path": "/hv-regimes/{ticker}",
+      "question": "What realized-vol regime is NVDA in, and are the short windows above or below the long ones?",
+      "one_liner": "Historical volatility across windows, its term structure and the regime crossovers.",
+      "summary": "Returns close-to-close realized vol at 5 to 252 day windows as a time series, the HV term structure with the vendor's alternative estimator, and a forecast block. Other views return the signals, the decomposition, or an ex-earnings series.",
+      "units": "All volatilities are annualised percentage points.",
+      "basis": "cls_hv is close-to-close; or_hv is the data feed's intraday-range estimator. view=ex_earnings recomputes the 30-day tenor from daily closes with earnings reaction sessions dropped.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        },
+        {
+          "name": "view",
+          "type": "query",
+          "default": "dashboard",
+          "bounds": "dashboard, signals, decomposition, ex_earnings",
+          "required": false,
+          "meaning": "Which block to return."
+        },
+        {
+          "name": "days",
+          "type": "query",
+          "default": 252,
+          "bounds": "20 to 1000",
+          "required": false,
+          "meaning": "History length."
+        }
+      ],
+      "fields": [
+        [
+          "timeseries[].clsHv5d to clsHv252d",
+          "Realized vol per window per day."
+        ],
+        [
+          "term_structure[].window, cls_hv, or_hv",
+          "The HV term structure."
+        ],
+        [
+          "forecast",
+          "Vendor forecast of 20-day and long-run vol when available."
+        ]
+      ],
+      "tools": [
+        "get_ticker_analytics"
+      ],
+      "prompts": [
+        "What is NVDA's 20-day realized vol versus its 1-year?",
+        "Show the realized-vol term structure for AAPL.",
+        "Give me TSLA's realized vol excluding earnings days."
+      ],
+      "since": "1.0",
+      "plan": "premium",
+      "docs_url": "https://apexvol.com/developers/implied-volatility-api/hv-regimes",
+      "markdown_url": "https://apexvol.com/developers/implied-volatility-api/hv-regimes.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Premium plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "iv-opportunities",
+      "family": "implied-volatility-api",
+      "method": "GET",
+      "path": "/iv-opportunities/{ticker}",
+      "question": "Is NVDA's IV stretched far enough from its mean to expect reversion?",
+      "one_liner": "IV mean-reversion read: z-score, reversion target and the expected IV change.",
+      "summary": "Compares current IV with its mean and standard deviation, returns the z-score, a reversion target and the expected IV move, and labels whether an extreme is present.",
+      "units": "IVs are annualised percentage points; z_score is in standard deviations; expected_pct_change is percent.",
+      "basis": "Mean and standard deviation are taken over the IV series behind /iv-rank.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        }
+      ],
+      "fields": [
+        [
+          "current_iv, mean_iv, std_iv",
+          "Today's IV and its distribution."
+        ],
+        [
+          "z_score",
+          "How far IV is from its mean, in standard deviations."
+        ],
+        [
+          "reversion_target, expected_iv_move",
+          "Where IV would go if it reverted."
+        ],
+        [
+          "opportunity",
+          "SELL_VOL, BUY_VOL or NO_EXTREME."
+        ],
+        [
+          "term_structure[].z_score",
+          "The same read per expiration."
+        ]
+      ],
+      "tools": [
+        "find_iv_opportunities"
+      ],
+      "prompts": [
+        "Is NVDA's implied vol stretched relative to its mean?",
+        "Which of my watchlist has an IV z-score above 2?",
+        "Should I expect AAPL IV to revert from here?"
+      ],
+      "since": "1.0",
+      "plan": "premium",
+      "docs_url": "https://apexvol.com/developers/implied-volatility-api/iv-opportunities",
+      "markdown_url": "https://apexvol.com/developers/implied-volatility-api/iv-opportunities.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Premium plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "iv-rank",
+      "family": "implied-volatility-api",
+      "method": "GET",
+      "path": "/iv-rank/{ticker}",
+      "question": "Is NVDA's implied volatility high or low for NVDA right now?",
+      "one_liner": "IV rank and IV percentile against the last year, with the range they were measured on.",
+      "summary": "Returns where today's implied volatility sits inside its own 52-week range (iv_rank, 0 to 100) and the share of days that closed with lower IV (iv_percentile), plus the min, max, mean and state label the numbers were built from.",
+      "units": "current_iv, iv30d and the range bounds are annualised IV in percentage points (34.43 means 34.43%). iv_rank and the percentiles are 0 to 100.",
+      "basis": "iv_basis names the daily series the rank is measured on; iv30d is the 30-day constant-maturity IV used by the VRP endpoints, so the two can differ slightly. iv_percentile is the one-year percentile from the data feed.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        },
+        {
+          "name": "lookback_days",
+          "type": "query",
+          "default": 252,
+          "bounds": "20 to 1260, clamped",
+          "required": false,
+          "meaning": "Days of history behind the rank and the 1y percentile."
+        }
+      ],
+      "fields": [
+        [
+          "iv_rank",
+          "Today's IV as a position between the 52-week low (0) and high (100)."
+        ],
+        [
+          "iv_percentile",
+          "Share of lookback days that closed with IV below today's."
+        ],
+        [
+          "current_iv",
+          "The IV the rank was computed from, in percentage points."
+        ],
+        [
+          "iv30d",
+          "The 30-day constant-maturity IV, the basis the VRP endpoints use."
+        ],
+        [
+          "iv_min_52w, iv_max_52w, iv_mean, iv_std",
+          "The range and distribution behind the rank."
+        ],
+        [
+          "iv_state",
+          "VERY_LOW to VERY_HIGH so a caller can branch without picking thresholds."
+        ],
+        [
+          "iv_rank_1m, iv_percentile_1m",
+          "The same measures over the last month."
+        ]
+      ],
+      "tools": [
+        "get_iv_rank"
+      ],
+      "prompts": [
+        "What is NVDA's IV rank and percentile right now?",
+        "Is implied volatility on AAPL high or low compared with the last year?",
+        "Rank SPY, QQQ and IWM by IV rank."
+      ],
+      "since": "1.0",
+      "plan": "premium",
+      "docs_url": "https://apexvol.com/developers/implied-volatility-api/iv-rank",
+      "markdown_url": "https://apexvol.com/developers/implied-volatility-api/iv-rank.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Premium plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "monies",
+      "family": "implied-volatility-api",
+      "method": "GET",
+      "path": "/monies/{ticker}",
+      "question": "What does the smoothed vol surface say about SPY at each delta and expiration?",
+      "one_liner": "The market-implied vol surface, the forecast surface, or the comparison between the two.",
+      "summary": "Returns the ATM IV, slope, curvature and the smile across delta points for each expiration, either as the market's smoothed surface, the vendor forecast, or a rich-versus-cheap comparison of the two.",
+      "units": "atm_iv and the smile values are annualised percentage points; slope and curvature are surface parameters.",
+      "basis": "Surface points are the data feed's smoothed fit, not raw quotes. Expirations may include the most recent expired date; filter on dte greater than 0.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        },
+        {
+          "name": "surface",
+          "type": "query",
+          "default": "implied",
+          "bounds": "implied, forecast, comparison",
+          "required": false,
+          "meaning": "Which surface to return."
+        }
+      ],
+      "fields": [
+        [
+          "expirations[].expiration, dte, atm_iv",
+          "The ATM point per expiration."
+        ],
+        [
+          "expirations[].slope, curvature, smile",
+          "The smile parameters and the values at each delta point."
+        ],
+        [
+          "delta_points",
+          "The deltas the smile is sampled at."
+        ],
+        [
+          "expirations[].earn_effect",
+          "Earnings contribution to that expiration's IV."
+        ]
+      ],
+      "tools": [
+        "get_monies_surface"
+      ],
+      "prompts": [
+        "Show me the SPY vol surface by delta for the next 3 expirations.",
+        "Where is the forecast surface cheaper than the market on NVDA?",
+        "What is the 25-delta put IV versus ATM on AAPL for October?"
+      ],
+      "since": "1.0",
+      "plan": "pro",
+      "docs_url": "https://apexvol.com/developers/implied-volatility-api/monies",
+      "markdown_url": "https://apexvol.com/developers/implied-volatility-api/monies.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Pro plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "skew",
+      "family": "implied-volatility-api",
+      "method": "GET",
+      "path": "/skew/{ticker}",
+      "question": "How steep is NVDA's put skew today compared with its own history and its sector?",
+      "one_liner": "Put-call skew slope, curvature and the percentile of today's skew.",
+      "summary": "Returns the current skew slope and its forecast, the smile curvature with an interpretation, where today's slope sits against its one-month and one-year averages, and the ratio to the sector ETF. Other views return the history or the curvature only.",
+      "units": "slope and curvature are the data feed's surface parameters (unitless); percentile.current is 0 to 100; market_width.vol is in percentage points.",
+      "basis": "Slope is measured on the smoothed vol surface at the 30-day tenor. Read it against percentile.avg_1y rather than as an absolute.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        },
+        {
+          "name": "view",
+          "type": "query",
+          "default": "analysis",
+          "bounds": "analysis, history, curvature",
+          "required": false,
+          "meaning": "Which block to return."
+        },
+        {
+          "name": "days",
+          "type": "query",
+          "default": 252,
+          "bounds": "20 to 1000",
+          "required": false,
+          "meaning": "History length for view=history."
+        }
+      ],
+      "fields": [
+        [
+          "current.slope, slope_forecast",
+          "Today's skew slope and the model forecast."
+        ],
+        [
+          "percentile.current, avg_1m, avg_1y, stdv_1y",
+          "Today's slope percentile and the averages it is compared with."
+        ],
+        [
+          "curvature.interpretation, mispricing",
+          "What the smile shape says."
+        ],
+        [
+          "sector_relative.etf_slope_ratio",
+          "Skew relative to the sector ETF."
+        ]
+      ],
+      "tools": [
+        "get_ticker_analytics"
+      ],
+      "prompts": [
+        "Is NVDA's put skew steep right now compared with the last year?",
+        "How does AAPL's skew compare with its sector ETF?",
+        "Show me the skew history for SPY over 6 months."
+      ],
+      "since": "1.0",
+      "plan": "pro",
+      "docs_url": "https://apexvol.com/developers/implied-volatility-api/skew",
+      "markdown_url": "https://apexvol.com/developers/implied-volatility-api/skew.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Pro plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "term-structure",
+      "family": "implied-volatility-api",
+      "method": "GET",
+      "path": "/term-structure/{ticker}",
+      "question": "Is SPY's IV curve in contango or inverted, and what move does each expiration price?",
+      "one_liner": "At-the-money IV by expiration, with the straddle-implied move for each one.",
+      "summary": "One row per expiration with the ATM strike, ATM IV, straddle price and the one and two sigma bounds, so the shape of the curve and the priced move at each date come back in a single array.",
+      "units": "atm_iv is annualised percentage points. expected_move_dollar is dollars, expected_move_pct is percent of spot. straddle_* are option prices in dollars.",
+      "basis": "ATM IV is the chain IV at the strike nearest spot. expected_move comes from the straddle price; iv_expected_move is the sigma-based figure from IV and time.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        },
+        {
+          "name": "num_expirations",
+          "type": "query",
+          "default": 8,
+          "bounds": "1 to 20",
+          "required": false,
+          "meaning": "How many expirations to return, nearest first."
+        }
+      ],
+      "fields": [
+        [
+          "term_structure[].expiration, dte",
+          "The expiration and days to it."
+        ],
+        [
+          "term_structure[].atm_iv",
+          "At-the-money implied vol for that expiration."
+        ],
+        [
+          "term_structure[].straddle_price",
+          "ATM call plus put, the market's price for the move."
+        ],
+        [
+          "term_structure[].expected_move_pct, expected_move_dollar",
+          "The priced move to that date."
+        ],
+        [
+          "term_structure[].upper_1sigma, lower_1sigma",
+          "The one-sigma range from the straddle."
+        ],
+        [
+          "as_of",
+          "Trade date of the chain."
+        ]
+      ],
+      "tools": [
+        "get_term_structure"
+      ],
+      "prompts": [
+        "Is SPY's term structure in contango or backwardation right now?",
+        "What move is priced into NVDA for each of the next 6 expirations?",
+        "Show the IV term structure for AAPL and flag any inversion."
+      ],
+      "since": "1.0",
+      "plan": "premium",
+      "docs_url": "https://apexvol.com/developers/implied-volatility-api/term-structure",
+      "markdown_url": "https://apexvol.com/developers/implied-volatility-api/term-structure.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Premium plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "vix",
+      "family": "implied-volatility-api",
+      "method": "GET",
+      "path": "/vix",
+      "question": "Where is the VIX right now and how much did it move today?",
+      "one_liner": "VIX level, change and the day's range.",
+      "summary": "The current VIX print with open, high, low, previous close and the change in points and percent.",
+      "units": "VIX points; change_pct is percent.",
+      "basis": "Quote from the market data feed, updated intraday.",
+      "params": [],
+      "fields": [
+        [
+          "price, close, prev_close",
+          "The level now and at the last close."
+        ],
+        [
+          "change, change_pct",
+          "Move since the previous close."
+        ],
+        [
+          "open, high, low",
+          "Today's range."
+        ]
+      ],
+      "tools": [
+        "get_vix_snapshot"
+      ],
+      "prompts": [
+        "Where is the VIX right now?",
+        "Has the VIX moved much today?",
+        "Give me the VIX level before I look at SPY gamma."
+      ],
+      "since": "1.0",
+      "plan": "premium",
+      "docs_url": "https://apexvol.com/developers/implied-volatility-api/vix",
+      "markdown_url": "https://apexvol.com/developers/implied-volatility-api/vix.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Premium plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "volatility-cone",
+      "family": "implied-volatility-api",
+      "method": "GET",
+      "path": "/volatility-cone/{ticker}",
+      "question": "How does NVDA's implied vol at each tenor compare with what the stock has actually realized over the same windows?",
+      "one_liner": "A realized-volatility cone per tenor next to the chain IV at the same tenor.",
+      "summary": "For each requested window (10, 20, 30, 60, 90 days by default) returns the current realized vol, its historical min, percentiles, mean and max, and the interpolated implied vol at that tenor, so a caller can see whether options are rich or cheap along the curve.",
+      "units": "All volatilities are annualised percentage points. iv_to_rv_ratio is a plain ratio.",
+      "basis": "Per-tenor IVs are interpolated from the chain (iv_basis). Realized vol is close-to-close over the window (hv_basis). Each tenor flags earnings_in_window and carries rv_ex_earnings with the earnings reaction sessions removed.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        },
+        {
+          "name": "periods",
+          "type": "query",
+          "default": "10,20,30,60,90",
+          "bounds": "CSV of 2 to 252, at most 8 values",
+          "required": false,
+          "meaning": "Windows in trading days."
+        }
+      ],
+      "fields": [
+        [
+          "volatility_cone.<tenor>.iv",
+          "Implied vol interpolated to that tenor."
+        ],
+        [
+          "volatility_cone.<tenor>.current_rv",
+          "Realized vol over the most recent window of that length."
+        ],
+        [
+          "volatility_cone.<tenor>.p10 to p90, min, max",
+          "Where realized vol has ranged historically at that tenor."
+        ],
+        [
+          "volatility_cone.<tenor>.rv_ex_earnings",
+          "Realized vol with earnings reaction days dropped."
+        ],
+        [
+          "realized_vol_30d, realized_vol_30d_ex_earnings",
+          "The 30-day figures at the top level."
+        ],
+        [
+          "iv30d",
+          "The vendor 30-day IV for reconciliation with /vrp."
+        ]
+      ],
+      "tools": [
+        "get_volatility_cone"
+      ],
+      "prompts": [
+        "Show me NVDA's volatility cone. Is 30-day IV rich to realized?",
+        "Where does AAPL's realized vol sit in its historical range at 20 and 60 days?",
+        "Compare implied to realized across tenors for TSLA."
+      ],
+      "since": "1.0",
+      "plan": "premium",
+      "docs_url": "https://apexvol.com/developers/implied-volatility-api/volatility-cone",
+      "markdown_url": "https://apexvol.com/developers/implied-volatility-api/volatility-cone.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Premium plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "vrp",
+      "family": "implied-volatility-api",
+      "method": "GET",
+      "path": "/vrp/{ticker}",
+      "question": "Is NVDA's implied vol paying more than the stock actually moves?",
+      "one_liner": "Volatility risk premium: 30-day IV minus realized vol over a matching window, with an ex-earnings version.",
+      "summary": "Returns implied volatility, realized volatility over exactly lookback_days, their difference (the premium), the ratio, a percentile and a plain assessment. When an earnings report sits inside the window the ex-earnings figures are added.",
+      "units": "Volatilities and the premium are annualised percentage points; a premium of -12.0 means IV is 12 points below realized. vrp_ratio is IV divided by realized.",
+      "basis": "IV is the 30-day constant-maturity figure (iv_basis). Realized is the standard deviation of close-to-close log returns over lookback_days (hv_basis, hv_window). earnings_in_window says whether a report contaminates the realized figure.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        },
+        {
+          "name": "lookback_days",
+          "type": "query",
+          "default": 30,
+          "bounds": "5 to 252",
+          "required": false,
+          "meaning": "Length of the realized-vol window in trading days."
+        }
+      ],
+      "fields": [
+        [
+          "implied_volatility",
+          "30-day constant-maturity IV."
+        ],
+        [
+          "realized_volatility",
+          "Close-to-close realized vol over the window."
+        ],
+        [
+          "volatility_risk_premium",
+          "IV minus realized, in points. Positive means options are rich to the move."
+        ],
+        [
+          "volatility_risk_premium_ex_earnings, realized_volatility_ex_earnings",
+          "The same with earnings reaction days removed."
+        ],
+        [
+          "vrp_ratio, vrp_percentile",
+          "IV over realized, and where the premium sits historically."
+        ],
+        [
+          "assessment",
+          "A plain label for the premium."
+        ]
+      ],
+      "tools": [
+        "get_volatility_risk_premium"
+      ],
+      "prompts": [
+        "What is the volatility risk premium on NVDA, and is it rich or cheap?",
+        "Is AAPL implied vol above or below realized over the last 30 days?",
+        "Which of SPY, QQQ, IWM has the highest premium over realized?"
+      ],
+      "since": "1.0",
+      "plan": "premium",
+      "docs_url": "https://apexvol.com/developers/implied-volatility-api/vrp",
+      "markdown_url": "https://apexvol.com/developers/implied-volatility-api/vrp.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Premium plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "vrp-expirations",
+      "family": "implied-volatility-api",
+      "method": "GET",
+      "path": "/vrp/{ticker}/expirations",
+      "question": "Where on NVDA's curve is the premium over realized sitting?",
+      "one_liner": "The volatility risk premium broken down by expiration.",
+      "summary": "For each of the next expirations returns that expiration's IV, the realized vol over a matching horizon, the premium in points and as a share, and a signal, plus an average and a regime label for the curve.",
+      "units": "iv, hv and vrp are annualised percentage points; vrp_pct is the premium as a percentage of realized.",
+      "basis": "Per-expiration IV is the ATM chain IV; realized is matched to the days to that expiration.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        },
+        {
+          "name": "max_expirations",
+          "type": "query",
+          "default": 10,
+          "bounds": "1 to 30",
+          "required": false,
+          "meaning": "How many expirations to include."
+        }
+      ],
+      "fields": [
+        [
+          "vrp_by_expiration[].expiration, dte",
+          "The expiration and days to it."
+        ],
+        [
+          "vrp_by_expiration[].iv, hv, vrp, vrp_pct",
+          "The premium at that date."
+        ],
+        [
+          "vrp_by_expiration[].signal",
+          "RICH, CHEAP or NEUTRAL."
+        ],
+        [
+          "avg_vrp, regime, regime_desc",
+          "The curve in one line."
+        ]
+      ],
+      "tools": [
+        "get_volatility_risk_premium"
+      ],
+      "prompts": [
+        "Which NVDA expiration has the richest premium over realized?",
+        "Is the front of the SPY curve rich or cheap to realized?",
+        "Break down AAPL's VRP by expiration."
+      ],
+      "since": "1.0",
+      "plan": "premium",
+      "docs_url": "https://apexvol.com/developers/implied-volatility-api/vrp-expirations",
+      "markdown_url": "https://apexvol.com/developers/implied-volatility-api/vrp-expirations.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Premium plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "vrp-timeseries",
+      "family": "implied-volatility-api",
+      "method": "GET",
+      "path": "/vrp/{ticker}/timeseries",
+      "question": "How has the gap between NVDA's implied and realized vol moved over the last few months?",
+      "one_liner": "Daily IV, realized vol and their difference through time.",
+      "summary": "One row per trading day with the 30-day IV, the realized vol over hv_period and the premium, plus a current block, so the premium can be charted or fed to a model.",
+      "units": "All values are annualised percentage points (iv_units).",
+      "basis": "Same bases as /vrp: iv_basis and hv_basis are returned with the series.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        },
+        {
+          "name": "lookback_days",
+          "type": "query",
+          "default": 60,
+          "bounds": "10 to 504",
+          "required": false,
+          "meaning": "How many trading days of history."
+        },
+        {
+          "name": "hv_period",
+          "type": "query",
+          "default": 30,
+          "bounds": "5 to 252",
+          "required": false,
+          "meaning": "Realized-vol window per point."
+        }
+      ],
+      "fields": [
+        [
+          "timeseries[].date, iv, hv, vrp",
+          "The daily series."
+        ],
+        [
+          "current",
+          "Today's iv, hv, vrp and the hv_period used."
+        ],
+        [
+          "as_of",
+          "Last date in the series."
+        ]
+      ],
+      "tools": [
+        "get_volatility_risk_premium"
+      ],
+      "prompts": [
+        "Chart NVDA's volatility risk premium over the last 3 months.",
+        "Has AAPL's IV been above realized for most of the year?",
+        "Give me the IV versus HV series for TSLA as a table."
+      ],
+      "since": "1.0",
+      "plan": "premium",
+      "docs_url": "https://apexvol.com/developers/implied-volatility-api/vrp-timeseries",
+      "markdown_url": "https://apexvol.com/developers/implied-volatility-api/vrp-timeseries.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Premium plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "index",
+      "family": "options-chain-api",
+      "method": "GET",
+      "path": "/",
+      "question": "Which endpoints does the ApexVol API expose, and what does each one need?",
+      "one_liner": "Every endpoint with its method, path, plan, parameters, docs page and an example request.",
+      "summary": "Returns the whole token surface as one JSON list. For each endpoint you get the HTTP method, the full path with its placeholders, the family it belongs to, the plan it needs, a one-line description, the query parameters with their defaults, the developer page that documents it and a request line that works as written. The family list, the endpoint count and links to the OpenAPI spec and the Markdown reference come with it. The list is read from the same records that build the developer pages, so it can never lag them. A client that holds a token can discover the API from this one call instead of a bookmarked docs page, and an unknown path answers with did_you_mean entries in this same shape.",
+      "units": "No market data is involved. The response is the catalogue itself, and the call costs nothing against the monthly allowance.",
+      "basis": "Generated from the endpoint records at request time. The version and updated fields say which weekly capture the example requests come from.",
+      "params": [],
+      "fields": [
+        [
+          "endpoint_count",
+          "How many endpoints the list holds."
+        ],
+        [
+          "endpoints[].method, path",
+          "The HTTP method and the full path. {ticker} marks a path parameter."
+        ],
+        [
+          "endpoints[].tier",
+          "The lowest plan whose tokens can call it: basic, premium or pro."
+        ],
+        [
+          "endpoints[].params",
+          "The query parameters with their defaults, on one line."
+        ],
+        [
+          "endpoints[].docs",
+          "The developer page for the endpoint."
+        ],
+        [
+          "endpoints[].example",
+          "A request line that works as written, the one the docs sample was captured from."
+        ],
+        [
+          "families[]",
+          "The endpoint families with their page and endpoint count."
+        ],
+        [
+          "openapi, markdown",
+          "The OpenAPI 3.1 spec and the single-file Markdown reference."
+        ]
+      ],
+      "tools": [],
+      "prompts": [
+        "List every ApexVol API endpoint and the plan each one needs.",
+        "Which endpoints cover earnings, and what parameters do they take?",
+        "Give me a working example request for each gamma exposure endpoint."
+      ],
+      "since": "1.17",
+      "plan": "basic",
+      "docs_url": "https://apexvol.com/developers/options-chain-api/index",
+      "markdown_url": "https://apexvol.com/developers/options-chain-api/index.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ]
+      ]
+    },
+    {
+      "slug": "chain-at-time",
+      "family": "options-chain-api",
+      "method": "GET",
+      "path": "/chain-at-time/{ticker}",
+      "question": "How was SPY's 21 August chain priced at the close on 14 August?",
+      "one_liner": "The end-of-day chain snapshot for a past trade date.",
+      "summary": "Returns calls and puts for one expiration as they were priced at the close of a past trading day, with quotes, IV, Greeks, volume and open interest.",
+      "units": "Prices in dollars; implied_vol as a decimal; Greeks per share.",
+      "basis": "End-of-day snapshot from the historical feed. Both the expiration and the trade date must be past dates.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        },
+        {
+          "name": "expiration",
+          "type": "query",
+          "default": null,
+          "bounds": "YYYY-MM-DD",
+          "required": true,
+          "meaning": "The expiration to fetch."
+        },
+        {
+          "name": "trade_date",
+          "type": "query",
+          "default": null,
+          "bounds": "YYYY-MM-DD, a past trading day",
+          "required": true,
+          "meaning": "The day whose close to use."
+        }
+      ],
+      "fields": [
+        [
+          "calls[], puts[]",
+          "One row per strike per side."
+        ],
+        [
+          "strike, bid, ask, implied_vol",
+          "The quote and IV that day."
+        ],
+        [
+          "delta, gamma, theta, vega, rho",
+          "Greeks at the close."
+        ],
+        [
+          "underlying_price, trade_date, time_of_day",
+          "Context."
+        ]
+      ],
+      "tools": [
+        "get_historical_chain"
+      ],
+      "prompts": [
+        "Show the SPY chain for 21 August as it was priced on 14 August.",
+        "What was the IV of the NVDA 200 call on the day before earnings?",
+        "Pull the AAPL chain snapshot from last Friday."
+      ],
+      "since": "1.0",
+      "plan": "pro",
+      "docs_url": "https://apexvol.com/developers/options-chain-api/chain-at-time",
+      "markdown_url": "https://apexvol.com/developers/options-chain-api/chain-at-time.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Pro plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "chain",
+      "family": "options-chain-api",
+      "method": "GET",
+      "path": "/chain/{ticker}",
+      "question": "What does NVDA's options chain look like near the money for the nearest expiration?",
+      "one_liner": "The full chain per expiration: quotes, per-contract IV, Greeks, volume and open interest.",
+      "summary": "One row per strike with call and put bid, ask, IV, delta, gamma, theta, vega, rho, volume and open interest for each requested expiration. Defaults to the nearest expiration and a window of strikes around spot; strike_window says when rows were trimmed.",
+      "units": "Prices are dollars per share. IV Call and IV Put are decimals (0.2569 means 25.69%). Greeks are per share; volume and OI are contracts.",
+      "basis": "Quotes are the parity-implied bid and ask from the data feed, not exchange NBBO. Spot is the nearest expiration's forward-implied price.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        },
+        {
+          "name": "expiration",
+          "type": "query",
+          "default": "nearest",
+          "bounds": "YYYY-MM-DD, a listed expiration",
+          "required": false,
+          "meaning": "Which expiration to use. Defaults to the nearest one."
+        },
+        {
+          "name": "num_expirations",
+          "type": "query",
+          "default": 1,
+          "bounds": "1 to 10",
+          "required": false,
+          "meaning": "How many expirations when expiration is not set."
+        },
+        {
+          "name": "strikes_around",
+          "type": "query",
+          "default": 20,
+          "bounds": "0 for the full chain",
+          "required": false,
+          "meaning": "Strikes per side of the money to keep."
+        }
+      ],
+      "fields": [
+        [
+          "chains.<expiration>[]",
+          "Rows keyed by expiration date."
+        ],
+        [
+          "Strike, Call Bid, Call Ask, Put Bid, Put Ask",
+          "The quotes."
+        ],
+        [
+          "IV Call, IV Put",
+          "Per-contract implied vol as a decimal."
+        ],
+        [
+          "Delta Call, Gamma Call, Theta Call, Vega Call, and the Put twins",
+          "Per-share Greeks."
+        ],
+        [
+          "Volume and OI columns",
+          "Contracts traded today and open."
+        ],
+        [
+          "stock_price, strike_window",
+          "Spot used and how the rows were trimmed."
+        ]
+      ],
+      "tools": [
+        "get_options_chain"
+      ],
+      "prompts": [
+        "Show me the NVDA options chain for the nearest expiration.",
+        "What are the 30-delta strikes on AAPL for October?",
+        "Pull the SPY chain with 5 strikes either side of spot."
+      ],
+      "since": "1.0",
+      "plan": "basic",
+      "docs_url": "https://apexvol.com/developers/options-chain-api/chain",
+      "markdown_url": "https://apexvol.com/developers/options-chain-api/chain.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "expirations",
+      "family": "options-chain-api",
+      "method": "GET",
+      "path": "/expirations/{ticker}",
+      "question": "Which expirations are listed for NVDA?",
+      "one_liner": "The listed expiration dates for a ticker.",
+      "summary": "Returns the expiration dates the platform has a chain for, nearest first. Use it before calling an expiration-specific endpoint.",
+      "units": "Dates as YYYY-MM-DD.",
+      "basis": "Live listing from the data feed.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        }
+      ],
+      "fields": [
+        [
+          "expirations[]",
+          "Expiration dates, nearest first."
+        ]
+      ],
+      "tools": [
+        "get_expirations"
+      ],
+      "prompts": [
+        "What expirations does NVDA have listed?",
+        "Is there a weekly expiration for AAPL next Friday?",
+        "List the next 6 SPY expirations."
+      ],
+      "since": "1.0",
+      "plan": "basic",
+      "docs_url": "https://apexvol.com/developers/options-chain-api/expirations",
+      "markdown_url": "https://apexvol.com/developers/options-chain-api/expirations.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "options-by-delta",
+      "family": "options-chain-api",
+      "method": "GET",
+      "path": "/options-by-delta/{ticker}",
+      "question": "Which NVDA call is closest to 30 delta, and what does it cost?",
+      "one_liner": "The contract nearest a target delta with its strike, IV and quote.",
+      "summary": "Returns the single call or put whose delta is closest to the target for the chosen expiration, with the actual delta, strike, bid, ask, mid and IV.",
+      "units": "iv is a decimal (0.2569); iv_pct carries the same value in percentage points. Prices are dollars.",
+      "basis": "Delta from the chain row. delta is bounded to 0.01 to 0.99.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        },
+        {
+          "name": "delta",
+          "type": "query",
+          "default": 0.3,
+          "bounds": "0.01 to 0.99",
+          "required": false,
+          "meaning": "Target absolute delta."
+        },
+        {
+          "name": "option_type",
+          "type": "query",
+          "default": "call",
+          "bounds": "call or put",
+          "required": false,
+          "meaning": "Which side."
+        },
+        {
+          "name": "expiration",
+          "type": "query",
+          "default": "nearest",
+          "bounds": "YYYY-MM-DD, a listed expiration",
+          "required": false,
+          "meaning": "Which expiration to use. Defaults to the nearest one."
+        }
+      ],
+      "fields": [
+        [
+          "strike, actual_delta, target_delta",
+          "The contract chosen and how close it is."
+        ],
+        [
+          "bid, ask, mid",
+          "The quote."
+        ],
+        [
+          "iv, iv_pct, iv_units",
+          "Implied vol in both forms."
+        ],
+        [
+          "expiration, stock_price",
+          "Context for the pick."
+        ]
+      ],
+      "tools": [
+        "get_options_by_delta"
+      ],
+      "prompts": [
+        "Which NVDA call is closest to 30 delta for the nearest expiration?",
+        "Find the 20-delta put on SPY for October.",
+        "What is the mid on the 16-delta AAPL call?"
+      ],
+      "since": "1.0",
+      "plan": "basic",
+      "docs_url": "https://apexvol.com/developers/options-chain-api/options-by-delta",
+      "markdown_url": "https://apexvol.com/developers/options-chain-api/options-by-delta.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "search",
+      "family": "options-chain-api",
+      "method": "GET",
+      "path": "/search",
+      "question": "Which symbol is NVIDIA, and is it covered?",
+      "one_liner": "Resolve a company name or partial symbol to a covered ticker.",
+      "summary": "Searches the coverage universe by name or symbol and returns matches with sector and market-cap tier, plus whether an exact symbol match is supported.",
+      "units": "None.",
+      "basis": "The platform's coverage registry, refreshed from the data feed.",
+      "params": [
+        {
+          "name": "q",
+          "type": "query",
+          "default": null,
+          "bounds": "text",
+          "required": true,
+          "meaning": "Company name or symbol fragment."
+        },
+        {
+          "name": "limit",
+          "type": "query",
+          "default": 8,
+          "bounds": "1 to 20",
+          "required": false,
+          "meaning": "Maximum matches."
+        }
+      ],
+      "fields": [
+        [
+          "results[].symbol, name, sector, market_cap_tier",
+          "Each match."
+        ],
+        [
+          "supported, exact_match",
+          "Whether the query is an exact covered symbol."
+        ]
+      ],
+      "tools": [
+        "search_tickers"
+      ],
+      "prompts": [
+        "What is the ticker for NVIDIA?",
+        "Is BRK.B covered?",
+        "Find symbols matching \"semiconductor\"."
+      ],
+      "since": "1.0",
+      "plan": "basic",
+      "docs_url": "https://apexvol.com/developers/options-chain-api/search",
+      "markdown_url": "https://apexvol.com/developers/options-chain-api/search.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "stock",
+      "family": "options-chain-api",
+      "method": "GET",
+      "path": "/stock/{ticker}",
+      "question": "What is NVDA trading at and what company is it?",
+      "one_liner": "The current price with the company name, sector, market cap and beta.",
+      "summary": "A small payload with the live price, company name, sector, industry, market cap, volume, beta and the next earnings date when known.",
+      "units": "price is dollars. market_cap, volume and beta are returned as formatted strings.",
+      "basis": "price is the mid of the nearest-expiration parity quote from the options feed, not an exchange last. No bid or ask in this payload.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        }
+      ],
+      "fields": [
+        [
+          "price",
+          "Live mid price."
+        ],
+        [
+          "company_name, sector, industry",
+          "Identity from the coverage registry."
+        ],
+        [
+          "market_cap, volume, beta",
+          "Formatted strings."
+        ],
+        [
+          "earnings_date",
+          "Next report when the feed has one."
+        ]
+      ],
+      "tools": [
+        "get_stock_price"
+      ],
+      "prompts": [
+        "What is NVDA trading at?",
+        "Give me AAPL's price, sector and market cap.",
+        "Which sector is AMD in?"
+      ],
+      "since": "1.0",
+      "plan": "basic",
+      "docs_url": "https://apexvol.com/developers/options-chain-api/stock",
+      "markdown_url": "https://apexvol.com/developers/options-chain-api/stock.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "charm",
+      "family": "options-greeks-api",
+      "method": "GET",
+      "path": "/charm/{ticker}",
+      "question": "How much delta will dealers shed on SPY overnight from charm?",
+      "one_liner": "Charm exposure by strike: the delta that decays into tomorrow.",
+      "summary": "Returns total, call and put charm exposure for the chosen expiration and the per-strike breakdown, plus the detailed rows with IV and open interest.",
+      "units": "charm_exposure is delta shares per day (positive means dealers gain long delta as time passes).",
+      "basis": "Dealer convention: dealers short customer positions. Computed from open interest and per-contract charm.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        },
+        {
+          "name": "expiration",
+          "type": "query",
+          "default": "nearest",
+          "bounds": "YYYY-MM-DD, a listed expiration",
+          "required": false,
+          "meaning": "Which expiration to use. Defaults to the nearest one."
+        }
+      ],
+      "fields": [
+        [
+          "total_charm, call_charm, put_charm",
+          "Aggregate charm exposure."
+        ],
+        [
+          "charm_by_strike[].strike, charm_exposure, oi",
+          "The per-strike profile."
+        ],
+        [
+          "detailed[]",
+          "Per contract with charm, IV and OI."
+        ],
+        [
+          "dte, expiration, stock_price",
+          "Context."
+        ]
+      ],
+      "tools": [
+        "get_charm_exposure"
+      ],
+      "prompts": [
+        "How much delta decays out of SPY dealer books overnight?",
+        "Which strikes carry the most charm on QQQ?",
+        "Show charm exposure on NVDA for the nearest expiration."
+      ],
+      "since": "1.0",
+      "plan": "pro",
+      "docs_url": "https://apexvol.com/developers/options-greeks-api/charm",
+      "markdown_url": "https://apexvol.com/developers/options-greeks-api/charm.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Pro plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "greeks-heatmap",
+      "family": "options-greeks-api",
+      "method": "GET",
+      "path": "/greeks-heatmap/{ticker}",
+      "question": "Where are NVDA's gamma and vega concentrated across strikes and expirations?",
+      "one_liner": "Per-contract Greeks as strike-by-expiration matrices, with the OI walls and max pain.",
+      "summary": "Returns matrices of delta, gamma, theta, vega, rho, vanna, charm and IV over the strike and expiration grid, the aggregates by strike and by expiration, and the open-interest call and put walls plus max pain.",
+      "units": "Greeks are per share for one contract. The iv matrix is a decimal. Strikes in dollars.",
+      "basis": "Values are per-contract Greeks from the chain, not dealer exposure; for exposure use /greeks-exposure.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        },
+        {
+          "name": "option_type",
+          "type": "query",
+          "default": "calls",
+          "bounds": "calls or puts",
+          "required": false,
+          "meaning": "Which side to grid."
+        }
+      ],
+      "fields": [
+        [
+          "strikes[], expirations[]",
+          "The axes of every matrix."
+        ],
+        [
+          "greek_matrices.<greek>[strike][expiration]",
+          "One matrix per Greek plus iv."
+        ],
+        [
+          "aggregates.<greek>.by_strike, by_expiration",
+          "Sums along each axis."
+        ],
+        [
+          "levels.oi_call_wall, oi_put_wall, max_pain",
+          "Reference levels."
+        ]
+      ],
+      "tools": [
+        "get_greeks_heatmap"
+      ],
+      "prompts": [
+        "Where is gamma concentrated on NVDA across the next 4 expirations?",
+        "Show me the vega heatmap for AAPL puts.",
+        "Which strike has the most call open interest on SPY?"
+      ],
+      "since": "1.0",
+      "plan": "basic",
+      "docs_url": "https://apexvol.com/developers/options-greeks-api/greeks-heatmap",
+      "markdown_url": "https://apexvol.com/developers/options-greeks-api/greeks-heatmap.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "third-order-greeks",
+      "family": "options-greeks-api",
+      "method": "GET",
+      "path": "/third-order-greeks/{ticker}",
+      "question": "How fast do SPY's gamma and vega change as spot and vol move?",
+      "one_liner": "Speed, zomma, color, vomma and ultima by strike, with definitions.",
+      "summary": "Returns the third-order Greeks per strike and per contract for one expiration, with a definitions block so a caller can label them.",
+      "units": "Per-share sensitivities for one contract; speed is gamma per dollar of spot, color is gamma per day, vomma is vega per vol point.",
+      "basis": "Analytic Black-Scholes derivatives on the chain IV.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        },
+        {
+          "name": "expiration",
+          "type": "query",
+          "default": "nearest",
+          "bounds": "YYYY-MM-DD, a listed expiration",
+          "required": false,
+          "meaning": "Which expiration to use. Defaults to the nearest one."
+        }
+      ],
+      "fields": [
+        [
+          "greeks_by_strike[].speed, zomma, color, vomma, ultima, vanna, charm",
+          "Per strike."
+        ],
+        [
+          "detailed[]",
+          "Per contract with type and IV."
+        ],
+        [
+          "definitions",
+          "One line per Greek."
+        ]
+      ],
+      "tools": [
+        "get_third_order_greeks"
+      ],
+      "prompts": [
+        "Show third-order Greeks for SPY at the money.",
+        "Where is vomma highest on NVDA?",
+        "How does gamma change with spot on QQQ, strike by strike?"
+      ],
+      "since": "1.0",
+      "plan": "pro",
+      "docs_url": "https://apexvol.com/developers/options-greeks-api/third-order-greeks",
+      "markdown_url": "https://apexvol.com/developers/options-greeks-api/third-order-greeks.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Pro plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "cross-index-gex",
+      "family": "gamma-exposure-api",
+      "method": "GET",
+      "path": "/cross-index-gex",
+      "question": "Which index has the most negative dealer gamma today?",
+      "one_liner": "Gamma exposure compared across SPY, QQQ, IWM and DIA.",
+      "summary": "Runs the GEX calculation for each index ETF and returns a comparison table of total exposure, normalized exposure and flip level, with the full per-index payload underneath.",
+      "units": "total_gex in dollars per 1% move; normalized_gex divides by market value so indices compare.",
+      "basis": "Same dealer convention and aggregation as /gex, per ticker.",
+      "params": [
+        {
+          "name": "tickers",
+          "type": "query",
+          "default": "SPY,QQQ,IWM,DIA",
+          "bounds": "CSV of index ETFs",
+          "required": false,
+          "meaning": "Which indices to compare."
+        }
+      ],
+      "fields": [
+        [
+          "comparison.<ticker>.total_gex, normalized_gex, flip_level, stock_price",
+          "The side-by-side table."
+        ],
+        [
+          "indices.<ticker>",
+          "The full /gex payload per index."
+        ]
+      ],
+      "tools": [
+        "get_cross_index_gex"
+      ],
+      "prompts": [
+        "Compare dealer gamma across SPY, QQQ and IWM.",
+        "Which index is in the deepest negative gamma?",
+        "Give me a cross-index gamma summary for the open."
+      ],
+      "since": "1.0",
+      "plan": "premium",
+      "docs_url": "https://apexvol.com/developers/gamma-exposure-api/cross-index-gex",
+      "markdown_url": "https://apexvol.com/developers/gamma-exposure-api/cross-index-gex.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Premium plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "gex",
+      "family": "gamma-exposure-api",
+      "method": "GET",
+      "path": "/gex/{ticker}",
+      "question": "Where is SPY's gamma flip today and which strikes hold the most dealer gamma?",
+      "one_liner": "Dealer gamma exposure by strike, the flip level, the walls and a regime read.",
+      "summary": "Returns total, call and put gamma exposure, the gamma flip, the call and put walls and key strike, the per-strike profile, a per-expiration breakdown and an implications block that names the regime. Compact detail windows the lists around spot.",
+      "units": "total_gex, call_gex, put_gex and gex per strike are dollars of gamma per 1% move; total_gex_billions is the same in billions. Strikes and levels are dollars.",
+      "basis": "Dealer convention: dealers are long customer-sold calls and short customer-bought puts. Aggregated across the expirations listed in expirations_selected.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        },
+        {
+          "name": "expiration",
+          "type": "query",
+          "default": "nearest",
+          "bounds": "YYYY-MM-DD, a listed expiration",
+          "required": false,
+          "meaning": "Which expiration to use. Defaults to the nearest one."
+        },
+        {
+          "name": "aggregate",
+          "type": "query",
+          "default": true,
+          "bounds": "true or false",
+          "required": false,
+          "meaning": "Sum across expirations or one only."
+        },
+        {
+          "name": "detail",
+          "type": "query",
+          "default": "full for REST, compact for MCP clients",
+          "bounds": "compact or full",
+          "required": false,
+          "meaning": "Windowed lists or everything."
+        },
+        {
+          "name": "strikes_around",
+          "type": "query",
+          "default": 25,
+          "bounds": "0 for all",
+          "required": false,
+          "meaning": "Strikes per side under compact."
+        }
+      ],
+      "fields": [
+        [
+          "total_gex_billions, call_gex, put_gex, gex_ratio",
+          "The headline exposure."
+        ],
+        [
+          "flip_level, gamma_flip, flip_degenerate",
+          "Where net gamma changes sign, or null when it does not."
+        ],
+        [
+          "key_levels.call_wall, put_wall, key_strike, spot",
+          "The levels traders watch."
+        ],
+        [
+          "gex_by_strike[].strike, gex, oi",
+          "The profile."
+        ],
+        [
+          "implications.volatility_regime, positioning, directional_bias",
+          "The regime in words."
+        ],
+        [
+          "window",
+          "What compact detail trimmed."
+        ]
+      ],
+      "tools": [
+        "get_gex"
+      ],
+      "prompts": [
+        "Where is the gamma flip on SPY right now?",
+        "Which SPY strikes are the call wall and put wall today?",
+        "Is QQQ in positive or negative gamma?"
+      ],
+      "since": "1.0",
+      "plan": "premium",
+      "docs_url": "https://apexvol.com/developers/gamma-exposure-api/gex",
+      "markdown_url": "https://apexvol.com/developers/gamma-exposure-api/gex.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Premium plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "greeks-exposure",
+      "family": "gamma-exposure-api",
+      "method": "GET",
+      "path": "/greeks-exposure/{ticker}",
+      "question": "Beyond gamma, where are SPY dealers exposed on delta, vanna and charm?",
+      "one_liner": "Dealer exposure for every Greek by strike, with a unit for each.",
+      "summary": "Returns dealer delta, gamma, vega, theta, vanna, charm and the higher-order exposures as totals and per-strike profiles, the key strike per Greek, and the key levels with distance from spot. The units block says what each number is.",
+      "units": "Per Greek; read units.<greek>. Gamma is dollars per 1% move, delta is delta shares, charm is delta shares per day.",
+      "basis": "Dealer convention as /gex. Aggregated over the listed expirations.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        },
+        {
+          "name": "expiration",
+          "type": "query",
+          "default": "nearest",
+          "bounds": "YYYY-MM-DD, a listed expiration",
+          "required": false,
+          "meaning": "Which expiration to use. Defaults to the nearest one."
+        },
+        {
+          "name": "aggregate",
+          "type": "query",
+          "default": true,
+          "bounds": "true or false",
+          "required": false,
+          "meaning": "Sum across expirations or one only."
+        }
+      ],
+      "fields": [
+        [
+          "exposures.<greek>.total, call_total, put_total, unit",
+          "Aggregate exposure per Greek."
+        ],
+        [
+          "exposures.<greek>.profile[]",
+          "Per-strike exposure."
+        ],
+        [
+          "greek_levels.<greek>.key_strike",
+          "The strike with the largest exposure."
+        ],
+        [
+          "key_levels.call_wall, put_wall, vanna_resistance, charm_pressure",
+          "Named levels with distance_pct from spot."
+        ],
+        [
+          "units",
+          "Unit string per Greek."
+        ]
+      ],
+      "tools": [
+        "get_ticker_analytics"
+      ],
+      "prompts": [
+        "Where is dealer vanna exposure largest on SPY?",
+        "Show delta and gamma exposure by strike for QQQ.",
+        "What is the charm pressure level on SPY today?"
+      ],
+      "since": "1.0",
+      "plan": "premium",
+      "docs_url": "https://apexvol.com/developers/gamma-exposure-api/greeks-exposure",
+      "markdown_url": "https://apexvol.com/developers/gamma-exposure-api/greeks-exposure.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Premium plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "max-pain",
+      "family": "gamma-exposure-api",
+      "method": "GET",
+      "path": "/max-pain/{ticker}",
+      "question": "What strike is max pain for SPY this expiration, and does it matter?",
+      "one_liner": "The max-pain strike, its distance from spot and how strong the magnet is.",
+      "summary": "Returns the strike where option holders lose the most at expiration, the total pain there, the distance from spot and a magnet-strength label, with the pain at every strike.",
+      "units": "Strikes and distance in dollars; distance_pct in percent; total_pain in dollars.",
+      "basis": "Sum of intrinsic value across open interest at each candidate settlement price.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        },
+        {
+          "name": "expiration",
+          "type": "query",
+          "default": "nearest",
+          "bounds": "YYYY-MM-DD, a listed expiration",
+          "required": false,
+          "meaning": "Which expiration to use. Defaults to the nearest one."
+        }
+      ],
+      "fields": [
+        [
+          "max_pain_strike, max_pain_value",
+          "The strike and the pain there."
+        ],
+        [
+          "distance_from_spot, distance_pct",
+          "How far spot is from it."
+        ],
+        [
+          "magnet_strength, likely_direction",
+          "Whether the pull is meaningful."
+        ],
+        [
+          "all_strikes[].strike, total_pain",
+          "The distribution."
+        ]
+      ],
+      "tools": [
+        "get_max_pain"
+      ],
+      "prompts": [
+        "What is max pain for SPY this Friday?",
+        "Is NVDA trading above or below max pain?",
+        "How strong is the max pain magnet on AAPL this week?"
+      ],
+      "since": "1.0",
+      "plan": "basic",
+      "docs_url": "https://apexvol.com/developers/gamma-exposure-api/max-pain",
+      "markdown_url": "https://apexvol.com/developers/gamma-exposure-api/max-pain.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "volume-profile",
+      "family": "gamma-exposure-api",
+      "method": "GET",
+      "path": "/volume-profile/{ticker}",
+      "question": "Which SPY strikes are trading the most volume and holding the most open interest?",
+      "one_liner": "Call and put volume and open interest by strike, with the ratios.",
+      "summary": "Returns the per-strike profile of call and put volume and open interest, the top strikes by each, and the aggregate put-call ratio.",
+      "units": "Contracts; ratios are unitless; distance_from_spot_pct in percent.",
+      "basis": "Today's cumulative volume and current open interest from the data feed.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        },
+        {
+          "name": "expiration",
+          "type": "query",
+          "default": "nearest",
+          "bounds": "YYYY-MM-DD, a listed expiration",
+          "required": false,
+          "meaning": "Which expiration to use. Defaults to the nearest one."
+        }
+      ],
+      "fields": [
+        [
+          "volume_profile[].strike, call_volume, put_volume, call_oi, put_oi",
+          "The profile."
+        ],
+        [
+          "top_volume_strikes[], top_oi_strikes[]",
+          "The leaders."
+        ],
+        [
+          "put_call_ratio, total_call_volume, total_put_volume",
+          "The aggregates."
+        ]
+      ],
+      "tools": [
+        "get_volume_profile"
+      ],
+      "prompts": [
+        "Which SPY strikes have the most volume today?",
+        "Where is open interest concentrated on NVDA for October?",
+        "What is the put-call ratio on AAPL by volume?"
+      ],
+      "since": "1.0",
+      "plan": "basic",
+      "docs_url": "https://apexvol.com/developers/gamma-exposure-api/volume-profile",
+      "markdown_url": "https://apexvol.com/developers/gamma-exposure-api/volume-profile.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "zero-dte",
+      "family": "gamma-exposure-api",
+      "method": "GET",
+      "path": "/zero-dte/{ticker}",
+      "question": "What is priced into SPY's same-day expiration, and where are the walls?",
+      "one_liner": "0DTE analytics: expected move, gamma regime, walls, theta burn and a mispricing read.",
+      "summary": "For the same-day (or next) expiration returns the ATM IV and expected move, the gamma regime and key levels, per-strike gamma and quotes, the hourly theta decay, an IV-forecast and skew read, the expected-move hit rate and an edge score. Compact detail windows the strike lists.",
+      "units": "Expected move in percent and dollars; IVs in percentage points; theta in dollars per day; net_gamma in dollars per 1% move.",
+      "basis": "Same dealer convention as /gex for gamma. em_hit_rate compares past same-day expected moves with realized.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        },
+        {
+          "name": "detail",
+          "type": "query",
+          "default": "full for REST, compact for MCP clients",
+          "bounds": "compact or full",
+          "required": false,
+          "meaning": "Windowed lists or everything."
+        },
+        {
+          "name": "strikes_around",
+          "type": "query",
+          "default": 15,
+          "bounds": "0 for all",
+          "required": false,
+          "meaning": "Strikes per side under compact."
+        }
+      ],
+      "fields": [
+        [
+          "metrics.expected_move, expected_move_dollars, atm_iv",
+          "The priced move."
+        ],
+        [
+          "key_levels.call_wall, put_wall, max_pain, em_upper, em_lower",
+          "Levels for the session."
+        ],
+        [
+          "gamma_regime.regime, total_net_gex",
+          "Positive or negative gamma."
+        ],
+        [
+          "by_strike[]",
+          "Per-strike Greeks, quotes and OI."
+        ],
+        [
+          "theta_burn.hourly_decay[]",
+          "How premium decays through the day."
+        ],
+        [
+          "edge_score, em_hit_rate, iv_forecast, skew_signal",
+          "The scored read."
+        ]
+      ],
+      "tools": [
+        "get_zero_dte"
+      ],
+      "prompts": [
+        "What is the expected move for SPY today and where are the 0DTE walls?",
+        "Is SPY 0DTE gamma positive or negative right now?",
+        "How often has SPY stayed inside its 0DTE expected move lately?"
+      ],
+      "since": "1.0",
+      "plan": "pro",
+      "docs_url": "https://apexvol.com/developers/gamma-exposure-api/zero-dte",
+      "markdown_url": "https://apexvol.com/developers/gamma-exposure-api/zero-dte.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Pro plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "flow",
+      "family": "options-flow-api",
+      "method": "GET",
+      "path": "/flow/{ticker}",
+      "question": "What are the largest NVDA option trades today, and are they bullish or bearish?",
+      "one_liner": "Options flow: the largest premium by contract, unusual volume against open interest and a sentiment summary.",
+      "summary": "Returns the largest flows, the unusual activity (volume far above open interest), the full flow list, the most active strikes and expirations, and a summary with net premium and a sentiment label. Compact detail caps the row lists.",
+      "units": "premium in dollars; volume and oi in contracts; volume_oi_ratio unitless.",
+      "basis": "Aggregated from today's cumulative volume by contract; is_market_hours and data_freshness say how live the data is.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        },
+        {
+          "name": "detail",
+          "type": "query",
+          "default": "full for REST, compact for MCP clients",
+          "bounds": "compact or full",
+          "required": false,
+          "meaning": "Capped lists or everything."
+        },
+        {
+          "name": "limit",
+          "type": "query",
+          "default": 25,
+          "bounds": "rows in all_flow under compact",
+          "required": false,
+          "meaning": "Row cap."
+        }
+      ],
+      "fields": [
+        [
+          "summary.sentiment, net_premium, call_put_ratio",
+          "The read in three numbers."
+        ],
+        [
+          "largest_flows[].strike, expiration, type, premium, volume, oi",
+          "The biggest tickets."
+        ],
+        [
+          "unusual_activity[]",
+          "Contracts where volume dwarfs open interest."
+        ],
+        [
+          "top_strikes, top_expirations",
+          "Where the activity clusters."
+        ],
+        [
+          "window",
+          "What compact detail trimmed."
+        ]
+      ],
+      "tools": [
+        "get_options_flow"
+      ],
+      "prompts": [
+        "What is the options flow on NVDA today, bullish or bearish?",
+        "Show unusual options activity on AAPL.",
+        "What are the largest premium trades on SPY this session?"
+      ],
+      "since": "1.0",
+      "plan": "premium",
+      "docs_url": "https://apexvol.com/developers/options-flow-api/flow",
+      "markdown_url": "https://apexvol.com/developers/options-flow-api/flow.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Premium plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "smart-money",
+      "family": "options-flow-api",
+      "method": "GET",
+      "path": "/smart-money/{ticker}",
+      "question": "Which NVDA trades look institutional today?",
+      "one_liner": "Trades that pass the size, opening-position and moneyness filters, scored.",
+      "summary": "Filters today's flow for large premium, likely opening positions and out-of-the-money contracts with time, returns each with the criteria it met and a score.",
+      "units": "premium in dollars; smart_money_score is a 0 to 100 heuristic.",
+      "basis": "Heuristic filters on the same flow data as /flow; not attributed to any counterparty.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        }
+      ],
+      "fields": [
+        [
+          "smart_money_trades[].strike, expiration, type, premium, volume, oi",
+          "The trade."
+        ],
+        [
+          "smart_money_trades[].criteria, smart_money_score",
+          "Why it qualified."
+        ],
+        [
+          "total_smart_trades",
+          "Count."
+        ]
+      ],
+      "tools": [
+        "get_smart_money_flow"
+      ],
+      "prompts": [
+        "Are there any institutional-looking trades on NVDA today?",
+        "Show smart-money flow on TSLA.",
+        "Which large opening trades hit AAPL this session?"
+      ],
+      "since": "1.0",
+      "plan": "premium",
+      "docs_url": "https://apexvol.com/developers/options-flow-api/smart-money",
+      "markdown_url": "https://apexvol.com/developers/options-flow-api/smart-money.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Premium plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "earnings-history",
+      "family": "earnings-expected-move-api",
+      "method": "GET",
+      "path": "/earnings-history/{ticker}",
+      "question": "How much has NVDA moved on each of its last eight reports?",
+      "one_liner": "Per-report moves, surprises and IV crush, with the statistics.",
+      "summary": "Returns one row per past report with the gap move, EPS estimate and actual, the surprise, IV before and after and the crush, plus averages by direction and by beat or miss.",
+      "units": "Moves in percent and dollars; IVs in percentage points; surprise_pct in percent.",
+      "basis": "The move is the previous close to the next open (the gap), not close to close.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        },
+        {
+          "name": "num_quarters",
+          "type": "query",
+          "default": 8,
+          "bounds": "1 to 40",
+          "required": false,
+          "meaning": "How many reports."
+        }
+      ],
+      "fields": [
+        [
+          "earnings_moves[].earnings_date, gap_move_pct, direction",
+          "The move per report."
+        ],
+        [
+          "earnings_moves[].eps_estimate, eps_actual, surprise_pct",
+          "The surprise."
+        ],
+        [
+          "earnings_moves[].iv_before, iv_after, iv_crush_pct",
+          "The crush."
+        ],
+        [
+          "statistics.avg_abs_move_pct, avg_up_move_pct, avg_down_move_pct, beat_count",
+          "The summary."
+        ]
+      ],
+      "tools": [
+        "analyze_earnings_history"
+      ],
+      "prompts": [
+        "How much has NVDA moved on its last 8 earnings?",
+        "What is AAPL's average earnings gap?",
+        "Show TSLA's earnings surprises and the moves that followed."
+      ],
+      "since": "1.0",
+      "plan": "pro",
+      "docs_url": "https://apexvol.com/developers/earnings-expected-move-api/earnings-history",
+      "markdown_url": "https://apexvol.com/developers/earnings-expected-move-api/earnings-history.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Pro plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "earnings-verdict",
+      "family": "earnings-expected-move-api",
+      "method": "GET",
+      "path": "/earnings-verdict/{ticker}",
+      "question": "Should I buy or sell the NVDA earnings straddle?",
+      "one_liner": "One call that scores the earnings straddle: priced move versus history, IV crush, drift and wings, with a verdict.",
+      "summary": "Combines the priced event move, the historical move distribution, consistency, IV crush, post-earnings drift and the earnings smile into an edge score and a signal with reasons and suggested structures. Preliminary when the report is far out.",
+      "units": "Moves in percent; IVs in percentage points; edge_score and confidence 0 to 100.",
+      "basis": "Historical moves are close-to-open gaps on the reaction day. The implied move is the straddle for the expiration after the report.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        }
+      ],
+      "fields": [
+        [
+          "verdict.signal, confidence, preliminary, reasons",
+          "The answer and why."
+        ],
+        [
+          "edge.edge_score, edge_interpretation, avg_straddle_return",
+          "How the straddle has paid historically."
+        ],
+        [
+          "timing.earnings_date, days_to_earnings, expected_move_pct, atm_iv",
+          "The setup."
+        ],
+        [
+          "direction, confidence",
+          "Bias and consistency of past moves."
+        ],
+        [
+          "wings",
+          "The earnings smile against the reference expiration."
+        ]
+      ],
+      "tools": [
+        "get_earnings_move_analysis"
+      ],
+      "prompts": [
+        "Should I buy or sell the NVDA earnings straddle?",
+        "Is the AAPL earnings move over or underpriced?",
+        "Give me an earnings verdict for TSLA with the reasons."
+      ],
+      "since": "1.0",
+      "plan": "pro",
+      "docs_url": "https://apexvol.com/developers/earnings-expected-move-api/earnings-verdict",
+      "markdown_url": "https://apexvol.com/developers/earnings-expected-move-api/earnings-verdict.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Pro plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "expected-move",
+      "family": "earnings-expected-move-api",
+      "method": "GET",
+      "path": "/expected-move/{ticker}",
+      "question": "How much does the market expect NVDA to move by the next expiration?",
+      "one_liner": "The straddle-implied expected move in dollars and percent, with bounds.",
+      "summary": "Returns the expected move to the chosen expiration from the ATM straddle, as dollars and percent of spot, with the upper and lower bounds and the days to expiry.",
+      "units": "expected_move_dollars and the bounds in dollars; expected_move_percent in percent.",
+      "basis": "ATM straddle price (call plus put) at the strike nearest spot. Skips a same-day expiry unless asked.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        },
+        {
+          "name": "expiration",
+          "type": "query",
+          "default": "nearest",
+          "bounds": "YYYY-MM-DD, a listed expiration",
+          "required": false,
+          "meaning": "Which expiration to use. Defaults to the nearest one."
+        }
+      ],
+      "fields": [
+        [
+          "expected_move_dollars, expected_move_percent",
+          "The move."
+        ],
+        [
+          "upper_bound, lower_bound",
+          "Spot plus and minus the move."
+        ],
+        [
+          "expiration, dte, stock_price",
+          "Context."
+        ]
+      ],
+      "tools": [
+        "calculate_expected_move"
+      ],
+      "prompts": [
+        "What is the expected move for NVDA by Friday?",
+        "How much move is priced into AAPL for the October expiration?",
+        "Give me the one-week expected move on SPY in dollars."
+      ],
+      "since": "1.0",
+      "plan": "premium",
+      "docs_url": "https://apexvol.com/developers/earnings-expected-move-api/expected-move",
+      "markdown_url": "https://apexvol.com/developers/earnings-expected-move-api/expected-move.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Premium plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "expected-vs-actual",
+      "family": "earnings-expected-move-api",
+      "method": "GET",
+      "path": "/expected-vs-actual/{ticker}",
+      "question": "Is the move priced into NVDA bigger or smaller than the stock usually makes?",
+      "one_liner": "The straddle-implied move against the historical average over the same horizon.",
+      "summary": "Returns the expected move to the nearest expiration, the historical average move over the same number of days, the difference and a fair-priced assessment.",
+      "units": "Moves in percent; straddle_price in dollars.",
+      "basis": "Historical average is the mean absolute move over days_to_expiration trading days.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        }
+      ],
+      "fields": [
+        [
+          "expected_move_pct, historical_avg_move_pct, difference_pct",
+          "The comparison."
+        ],
+        [
+          "assessment",
+          "OVERPRICED, UNDERPRICED or FAIRLY_PRICED."
+        ],
+        [
+          "expiration, days_to_expiration, straddle_price",
+          "Context."
+        ]
+      ],
+      "tools": [
+        "get_earnings_move_analysis"
+      ],
+      "prompts": [
+        "Is the move priced into NVDA bigger than it usually makes?",
+        "Are AAPL options overpricing the next two weeks?",
+        "Compare expected to actual moves for SPY."
+      ],
+      "since": "1.0",
+      "plan": "pro",
+      "docs_url": "https://apexvol.com/developers/earnings-expected-move-api/expected-vs-actual",
+      "markdown_url": "https://apexvol.com/developers/earnings-expected-move-api/expected-vs-actual.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Pro plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "historical-moves",
+      "family": "earnings-expected-move-api",
+      "method": "GET",
+      "path": "/historical-moves/{ticker}",
+      "question": "How big a move does NVDA typically make over 7, 14, 21 and 30 days?",
+      "one_liner": "The distribution of past moves per horizon.",
+      "summary": "For each horizon returns the average absolute move, the mean and median, the percentiles and the largest up and down moves, from daily closes.",
+      "units": "Percent.",
+      "basis": "Rolling close-to-close returns over each horizon across the history the platform holds.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        },
+        {
+          "name": "periods",
+          "type": "query",
+          "default": "7,14,21,30",
+          "bounds": "CSV of 1 to 252, at most 8",
+          "required": false,
+          "meaning": "Horizons in trading days."
+        }
+      ],
+      "fields": [
+        [
+          "move_analysis.<days>.avg_abs_move_pct, median_move_pct",
+          "Typical size."
+        ],
+        [
+          "move_analysis.<days>.p10, p25, p75, p90",
+          "The distribution."
+        ],
+        [
+          "move_analysis.<days>.max_up_move_pct, max_down_move_pct",
+          "The tails."
+        ]
+      ],
+      "tools": [
+        "get_earnings_move_analysis"
+      ],
+      "prompts": [
+        "How much does NVDA usually move in 2 weeks?",
+        "What is the 90th percentile 30-day move on AAPL?",
+        "Give me SPY's move distribution at 7 and 21 days."
+      ],
+      "since": "1.0",
+      "plan": "pro",
+      "docs_url": "https://apexvol.com/developers/earnings-expected-move-api/historical-moves",
+      "markdown_url": "https://apexvol.com/developers/earnings-expected-move-api/historical-moves.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Pro plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "iv-crush",
+      "family": "earnings-expected-move-api",
+      "method": "GET",
+      "path": "/iv-crush/{ticker}",
+      "question": "How much IV will NVDA lose after it reports, and what move does the current premium imply?",
+      "one_liner": "The pre-earnings IV build, the estimated crush and the move priced for the event.",
+      "summary": "Returns the current and ATM IV, the estimated IV after the event and the crush in percent, the expected move and the historical average, and whether the nearest expiration is an earnings play.",
+      "units": "IVs in percentage points; crush and moves in percent; straddle_price in dollars.",
+      "basis": "Crush estimate comes from past reports; expected move from the straddle covering the report.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        },
+        {
+          "name": "days_before",
+          "type": "query",
+          "default": 30,
+          "bounds": "1 to 120",
+          "required": false,
+          "meaning": "Window before the report."
+        },
+        {
+          "name": "days_after",
+          "type": "query",
+          "default": 30,
+          "bounds": "1 to 120",
+          "required": false,
+          "meaning": "Window after the report."
+        }
+      ],
+      "fields": [
+        [
+          "estimated_iv_after_event, estimated_iv_crush_pct",
+          "The crush."
+        ],
+        [
+          "expected_move_pct, historical_avg_move_pct",
+          "Priced versus typical."
+        ],
+        [
+          "atm_iv, current_iv, iv_premium",
+          "The IV build."
+        ],
+        [
+          "earnings_date, days_to_earnings, is_earnings_play",
+          "Timing."
+        ]
+      ],
+      "tools": [
+        "get_earnings_move_analysis"
+      ],
+      "prompts": [
+        "How much IV crush should I expect on NVDA after earnings?",
+        "Is AAPL IV elevated going into its report?",
+        "What move is priced for TSLA earnings versus its history?"
+      ],
+      "since": "1.0",
+      "plan": "pro",
+      "docs_url": "https://apexvol.com/developers/earnings-expected-move-api/iv-crush",
+      "markdown_url": "https://apexvol.com/developers/earnings-expected-move-api/iv-crush.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Pro plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "mispricing-assessment",
+      "family": "earnings-expected-move-api",
+      "method": "GET",
+      "path": "/mispricing-assessment/{ticker}",
+      "question": "Taking IV rank, VRP and the priced move together, are NVDA options rich or cheap?",
+      "one_liner": "A composite buy-premium or sell-premium signal with a score and its components.",
+      "summary": "Combines IV rank, the volatility risk premium and expected-versus-actual into a signal from -100 to +100 with confidence, and returns every component and the historical move distribution it used.",
+      "units": "Score -100 to +100; confidence 0 to 100; IVs in percentage points; moves in percent.",
+      "basis": "components.current_iv is on the VRP basis (30-day constant maturity); iv_basis, hv_basis and earnings_in_window are returned.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        }
+      ],
+      "fields": [
+        [
+          "signal, mispricing_score, confidence",
+          "The answer."
+        ],
+        [
+          "components.iv_rank, iv_percentile, vrp, expected_move_pct, historical_avg_move_pct",
+          "What drove it."
+        ],
+        [
+          "components.earnings_in_window",
+          "Whether a report contaminates realized vol."
+        ],
+        [
+          "historical_moves",
+          "The move distribution used."
+        ]
+      ],
+      "tools": [
+        "get_earnings_move_analysis"
+      ],
+      "prompts": [
+        "Are NVDA options rich or cheap overall right now?",
+        "Give me a premium buy-or-sell signal for AAPL with the components.",
+        "Which of my watchlist screens as sell-premium?"
+      ],
+      "since": "1.0",
+      "plan": "pro",
+      "docs_url": "https://apexvol.com/developers/earnings-expected-move-api/mispricing-assessment",
+      "markdown_url": "https://apexvol.com/developers/earnings-expected-move-api/mispricing-assessment.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Pro plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "post-earnings-drift",
+      "family": "earnings-expected-move-api",
+      "method": "GET",
+      "path": "/post-earnings-drift/{ticker}",
+      "question": "After NVDA gaps on earnings, does the move continue or fade?",
+      "one_liner": "Drift after the earnings gap over 1 to 20 days, split by gap direction.",
+      "summary": "Returns the average drift after positive and negative gaps at several horizons, continuation and reversal rates, each past event with its drift path, and a signal with a rationale.",
+      "units": "Drift and gaps in percent.",
+      "basis": "Gap is the close-to-open reaction; drift is measured from the reaction-day open.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        },
+        {
+          "name": "quarters",
+          "type": "query",
+          "default": 12,
+          "bounds": "1 to 40",
+          "required": false,
+          "meaning": "How many reports."
+        }
+      ],
+      "fields": [
+        [
+          "statistics.continuation_rate_5d, continuation_rate_20d",
+          "How often the gap direction held."
+        ],
+        [
+          "avg_drift_positive_gap, avg_drift_negative_gap",
+          "Average drift per horizon by gap sign."
+        ],
+        [
+          "events[].earnings_date, gap_pct, drift",
+          "Per event."
+        ],
+        [
+          "signal.action, rationale",
+          "The read."
+        ]
+      ],
+      "tools": [
+        "get_earnings_move_analysis"
+      ],
+      "prompts": [
+        "Does NVDA keep going after an earnings gap or fade?",
+        "What is AAPL's 5-day drift after a positive earnings gap?",
+        "Show post-earnings drift stats for AMD."
+      ],
+      "since": "1.0",
+      "plan": "pro",
+      "docs_url": "https://apexvol.com/developers/earnings-expected-move-api/post-earnings-drift",
+      "markdown_url": "https://apexvol.com/developers/earnings-expected-move-api/post-earnings-drift.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Pro plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "analyze-strategy",
+      "family": "strategies-api",
+      "method": "POST",
+      "path": "/analyze-strategy",
+      "question": "What are the Greeks, breakevens and odds on this set of legs?",
+      "one_liner": "Analyzes any custom legs: net Greeks, max profit and loss, breakevens, probability of profit and the P&L curve.",
+      "summary": "Accepts your own legs with premiums and returns the aggregate economics. Fetches live spot when stock_price is omitted.",
+      "units": "Premiums in dollars per share; totals per one-lot; probability_of_profit in percent.",
+      "basis": "Analytic Black-Scholes on the leg IVs you supply, or chain IVs when omitted.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "body",
+          "default": null,
+          "bounds": "symbol",
+          "required": true,
+          "meaning": "The underlying."
+        },
+        {
+          "name": "legs",
+          "type": "body",
+          "default": null,
+          "bounds": "array of {type, action, strike, expiration, premium, quantity, delta, theta, vega, iv}",
+          "required": true,
+          "meaning": "The legs."
+        },
+        {
+          "name": "stock_price",
+          "type": "body",
+          "default": "live",
+          "bounds": "dollars",
+          "required": false,
+          "meaning": "Override spot."
+        },
+        {
+          "name": "name",
+          "type": "body",
+          "default": null,
+          "bounds": "text",
+          "required": false,
+          "meaning": "A label for the result."
+        }
+      ],
+      "fields": [
+        [
+          "net_premium, max_profit, max_loss, risk_reward_ratio",
+          "The economics."
+        ],
+        [
+          "net_delta, net_theta, net_vega",
+          "Aggregate Greeks."
+        ],
+        [
+          "breakevens[], probability_of_profit",
+          "Where it pays and how often."
+        ],
+        [
+          "pnl_curve[]",
+          "Price and P&L pairs at expiration."
+        ]
+      ],
+      "tools": [
+        "analyze_strategy"
+      ],
+      "prompts": [
+        "Analyze this iron condor on SPY: sell 750 put, buy 745 put, sell 790 call, buy 795 call for October.",
+        "What are the breakevens on a NVDA 200/210 call spread?",
+        "Give me the Greeks and probability of profit on my legs."
+      ],
+      "since": "1.0",
+      "plan": "basic",
+      "docs_url": "https://apexvol.com/developers/strategies-api/analyze-strategy",
+      "markdown_url": "https://apexvol.com/developers/strategies-api/analyze-strategy.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          400,
+          "missing or malformed body"
+        ]
+      ]
+    },
+    {
+      "slug": "build-strategy",
+      "family": "strategies-api",
+      "method": "POST",
+      "path": "/build-strategy",
+      "question": "What does a 30-delta SPY iron condor look like right now, legs and all?",
+      "one_liner": "Builds a named strategy from the live chain and returns the legs with full analysis.",
+      "summary": "Given a ticker and strategy type, selects strikes from the live chain around the target delta and width, and returns the legs with premium and Greeks plus net premium, max profit and loss, breakevens, probability of profit and the P&L curve.",
+      "units": "Premiums in dollars per share; max_profit and max_loss in dollars per one-lot; probability_of_profit in percent; leg iv as a decimal.",
+      "basis": "Strikes are chosen from the live chain by delta; premiums are mid quotes.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "body",
+          "default": null,
+          "bounds": "symbol",
+          "required": true,
+          "meaning": "The underlying."
+        },
+        {
+          "name": "strategy_type",
+          "type": "body",
+          "default": null,
+          "bounds": "iron_condor, credit_spread, straddle, strangle and others",
+          "required": true,
+          "meaning": "Which structure."
+        },
+        {
+          "name": "expiration",
+          "type": "body",
+          "default": null,
+          "bounds": "YYYY-MM-DD",
+          "required": false,
+          "meaning": "Expiration; dte is used when absent."
+        },
+        {
+          "name": "dte",
+          "type": "body",
+          "default": 30,
+          "bounds": "days",
+          "required": false,
+          "meaning": "Target days to expiration."
+        },
+        {
+          "name": "width",
+          "type": "body",
+          "default": 5,
+          "bounds": "dollars",
+          "required": false,
+          "meaning": "Wing width."
+        },
+        {
+          "name": "target_delta",
+          "type": "body",
+          "default": 0.3,
+          "bounds": "0.05 to 0.50",
+          "required": false,
+          "meaning": "Short-strike delta."
+        }
+      ],
+      "fields": [
+        [
+          "legs[].type, action, strike, expiration, premium, delta, theta, vega, iv",
+          "The legs."
+        ],
+        [
+          "analysis.net_premium, max_profit, max_loss, breakevens",
+          "The economics."
+        ],
+        [
+          "analysis.probability_of_profit, pnl_curve",
+          "The odds and the curve."
+        ],
+        [
+          "name, stock_price",
+          "Context."
+        ]
+      ],
+      "tools": [
+        "build_strategy"
+      ],
+      "prompts": [
+        "Build a 30-delta iron condor on SPY expiring in about 30 days.",
+        "Set up a credit put spread on NVDA 5 wide.",
+        "Build a strangle on AAPL for the October expiration."
+      ],
+      "since": "1.0",
+      "plan": "basic",
+      "docs_url": "https://apexvol.com/developers/strategies-api/build-strategy",
+      "markdown_url": "https://apexvol.com/developers/strategies-api/build-strategy.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          400,
+          "missing or malformed body"
+        ]
+      ]
+    },
+    {
+      "slug": "optimize-strategy",
+      "family": "strategies-api",
+      "method": "POST",
+      "path": "/optimize-strategy",
+      "question": "Which strikes give the best SPY iron condor for max profit?",
+      "one_liner": "Grid-searches strikes for a strategy type and returns the winner with its analysis.",
+      "summary": "Searches strike combinations for iron condors and credit spreads against a target (max profit, min loss, risk-reward or probability) and returns the winning legs with the full analysis.",
+      "units": "As /build-strategy.",
+      "basis": "Candidates from the live chain; the target picks the objective.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "body",
+          "default": null,
+          "bounds": "symbol",
+          "required": true,
+          "meaning": "The underlying."
+        },
+        {
+          "name": "strategy_type",
+          "type": "body",
+          "default": null,
+          "bounds": "iron_condor or credit_spread",
+          "required": true,
+          "meaning": "Which structure."
+        },
+        {
+          "name": "target",
+          "type": "body",
+          "default": "max_profit",
+          "bounds": "max_profit, min_loss, risk_reward, probability",
+          "required": false,
+          "meaning": "What to optimize."
+        }
+      ],
+      "fields": [
+        [
+          "legs[]",
+          "The winning legs."
+        ],
+        [
+          "analysis",
+          "The economics of the winner."
+        ],
+        [
+          "optimization_target",
+          "Echo of the objective."
+        ]
+      ],
+      "tools": [
+        "optimize_strategy"
+      ],
+      "prompts": [
+        "Find the best-probability iron condor on SPY.",
+        "Optimize a credit spread on NVDA for risk-reward.",
+        "Which strikes maximize credit on a QQQ condor?"
+      ],
+      "since": "1.0",
+      "plan": "basic",
+      "docs_url": "https://apexvol.com/developers/strategies-api/optimize-strategy",
+      "markdown_url": "https://apexvol.com/developers/strategies-api/optimize-strategy.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          400,
+          "missing or malformed body"
+        ]
+      ]
+    },
+    {
+      "slug": "pop",
+      "family": "strategies-api",
+      "method": "POST",
+      "path": "/pop",
+      "question": "What is the probability of profit on these legs?",
+      "one_liner": "Probability of profit for a set of legs at expiration.",
+      "summary": "Given legs with IV and premium, the spot and days to expiry, returns the probability the position finishes profitable.",
+      "units": "probability_of_profit in percent.",
+      "basis": "N(d2)-style probability at expiration from the supplied IVs.",
+      "params": [
+        {
+          "name": "legs",
+          "type": "body",
+          "default": null,
+          "bounds": "array of {option_type, action, strike, iv, premium, quantity}",
+          "required": true,
+          "meaning": "The legs."
+        },
+        {
+          "name": "stock_price",
+          "type": "body",
+          "default": null,
+          "bounds": "dollars",
+          "required": true,
+          "meaning": "Spot."
+        },
+        {
+          "name": "days_to_exp",
+          "type": "body",
+          "default": null,
+          "bounds": "days",
+          "required": true,
+          "meaning": "Days to expiration."
+        }
+      ],
+      "fields": [
+        [
+          "probability_of_profit",
+          "Percent."
+        ],
+        [
+          "legs_count",
+          "How many legs were read."
+        ]
+      ],
+      "tools": [
+        "calculate_probability_of_profit"
+      ],
+      "prompts": [
+        "What is the probability of profit on this SPY iron condor?",
+        "How likely is my NVDA put spread to expire profitable?",
+        "Compute POP for a 16-delta strangle on AAPL."
+      ],
+      "since": "1.0",
+      "plan": "basic",
+      "docs_url": "https://apexvol.com/developers/strategies-api/pop",
+      "markdown_url": "https://apexvol.com/developers/strategies-api/pop.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          400,
+          "missing or malformed body"
+        ]
+      ]
+    },
+    {
+      "slug": "simulate-chain",
+      "family": "strategies-api",
+      "method": "POST",
+      "path": "/simulate-chain",
+      "question": "What would the SPY chain look like if the stock rose 2% and IV rose 5 points in 10 days?",
+      "one_liner": "Re-prices a chain at a hypothetical spot, days to expiry and IV shift.",
+      "summary": "Black-Scholes what-if: pass chain rows from /chain, or just a ticker and the server fetches the chain, and get every contract re-priced with new Greeks at your scenario.",
+      "units": "sim_price in dollars; sim_dte in days; iv_adjustment in IV percentage points; output prices in dollars, IVs as decimals.",
+      "basis": "Re-pricing holds each contract's IV plus the shift and moves spot and time.",
+      "params": [
+        {
+          "name": "sim_price",
+          "type": "body",
+          "default": null,
+          "bounds": "dollars",
+          "required": true,
+          "meaning": "Hypothetical spot."
+        },
+        {
+          "name": "sim_dte",
+          "type": "body",
+          "default": null,
+          "bounds": "days",
+          "required": true,
+          "meaning": "Days to expiration in the scenario."
+        },
+        {
+          "name": "iv_adjustment",
+          "type": "body",
+          "default": 0,
+          "bounds": "IV points",
+          "required": false,
+          "meaning": "Shift applied to every IV."
+        },
+        {
+          "name": "chain",
+          "type": "body",
+          "default": null,
+          "bounds": "rows from /chain",
+          "required": false,
+          "meaning": "Rows to re-price."
+        },
+        {
+          "name": "ticker",
+          "type": "body",
+          "default": null,
+          "bounds": "symbol",
+          "required": false,
+          "meaning": "Fetch the chain when rows are omitted."
+        },
+        {
+          "name": "expiration",
+          "type": "body",
+          "default": "nearest",
+          "bounds": "YYYY-MM-DD",
+          "required": false,
+          "meaning": "Which expiration to fetch."
+        },
+        {
+          "name": "strikes_around",
+          "type": "body",
+          "default": 20,
+          "bounds": "0 for all",
+          "required": false,
+          "meaning": "Strikes per side."
+        }
+      ],
+      "fields": [
+        [
+          "chain[].Strike, Call Bid, Call Ask, Put Bid, Put Ask",
+          "Re-priced quotes."
+        ],
+        [
+          "chain[].Delta Call, Gamma Call, Theta Call, Vega Call and the put twins",
+          "Re-priced Greeks."
+        ],
+        [
+          "sim_price, sim_dte, iv_adjustment, expiration",
+          "The scenario echoed."
+        ]
+      ],
+      "tools": [
+        "simulate_option_chain"
+      ],
+      "prompts": [
+        "Re-price the SPY chain at 790 with 10 days left and IV up 5 points.",
+        "What would my NVDA calls be worth if the stock fell 5% tomorrow?",
+        "Simulate the AAPL chain at a 3% higher spot."
+      ],
+      "since": "1.0",
+      "plan": "basic",
+      "docs_url": "https://apexvol.com/developers/strategies-api/simulate-chain",
+      "markdown_url": "https://apexvol.com/developers/strategies-api/simulate-chain.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          400,
+          "missing or malformed body"
+        ]
+      ]
+    },
+    {
+      "slug": "hedge-recommendations",
+      "family": "risk-api",
+      "method": "POST",
+      "path": "/hedge-recommendations",
+      "question": "How many SPY puts or shares neutralise my delta?",
+      "one_liner": "Stock and option hedges that bring your net delta to a target.",
+      "summary": "Computes net portfolio delta and returns a share hedge and an option alternative on the hedge ticker sized to reach the target delta, with cost estimates and projected Greeks after the hedge.",
+      "units": "Deltas in share-equivalents; est_cost in dollars.",
+      "basis": "Share-equivalent hedge, not beta-weighted. Option hedge uses the live chain on hedge_ticker.",
+      "params": [
+        {
+          "name": "positions",
+          "type": "body",
+          "default": null,
+          "bounds": "as /portfolio-greeks",
+          "required": true,
+          "meaning": "The book."
+        },
+        {
+          "name": "hedge_ticker",
+          "type": "body",
+          "default": "SPY",
+          "bounds": "symbol",
+          "required": false,
+          "meaning": "What to hedge with."
+        },
+        {
+          "name": "target_delta",
+          "type": "body",
+          "default": 0,
+          "bounds": "share-equivalents",
+          "required": false,
+          "meaning": "Where to land."
+        }
+      ],
+      "fields": [
+        [
+          "current_delta, delta_gap, target_delta",
+          "The gap to close."
+        ],
+        [
+          "hedges[].type, action, contracts, strike, expiration, est_cost, description",
+          "Each hedge."
+        ],
+        [
+          "projected_greeks",
+          "Greeks after the hedge."
+        ]
+      ],
+      "tools": [
+        "get_hedge_recommendations"
+      ],
+      "prompts": [
+        "How do I delta-hedge my book with SPY puts?",
+        "How many SPY shares neutralise these positions?",
+        "Get me to flat delta using QQQ options."
+      ],
+      "since": "1.0",
+      "plan": "pro",
+      "docs_url": "https://apexvol.com/developers/risk-api/hedge-recommendations",
+      "markdown_url": "https://apexvol.com/developers/risk-api/hedge-recommendations.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Pro plan required"
+        ],
+        [
+          400,
+          "missing or malformed body"
+        ]
+      ]
+    },
+    {
+      "slug": "portfolio-greeks",
+      "family": "risk-api",
+      "method": "POST",
+      "path": "/portfolio-greeks",
+      "question": "What is my net delta, theta and vega across these positions?",
+      "one_liner": "Aggregate Greeks and a risk level for a list of stock and option positions.",
+      "summary": "Sums delta, theta and vega across positions, returns exposure as a share of value, daily decay, a risk label and a per-ticker breakdown.",
+      "units": "total_delta in share-equivalents; total_theta in dollars per day; total_vega in dollars per vol point; percentages in percent.",
+      "basis": "Per-share Greeks come from the positions you pass (take them from /chain); stock positions count delta 1 per share.",
+      "params": [
+        {
+          "name": "positions",
+          "type": "body",
+          "default": null,
+          "bounds": "array of {ticker, position_type STOCK|CALL|PUT, quantity, strike, expiration, entry_price, current_price, delta, gamma, theta, vega, iv}",
+          "required": true,
+          "meaning": "The book."
+        }
+      ],
+      "fields": [
+        [
+          "portfolio_summary.total_delta, total_theta, total_vega",
+          "The net Greeks."
+        ],
+        [
+          "portfolio_summary.risk_level, delta_exposure_pct, daily_decay_pct",
+          "The read."
+        ],
+        [
+          "positions_by_ticker.<ticker>",
+          "Per-ticker delta, theta, vega and value."
+        ]
+      ],
+      "tools": [
+        "calculate_portfolio_greeks"
+      ],
+      "prompts": [
+        "What are my portfolio Greeks: 100 SPY shares and short one 30-delta put?",
+        "Is my book net long or short vega?",
+        "Roll up delta and theta across these positions."
+      ],
+      "since": "1.0",
+      "plan": "pro",
+      "docs_url": "https://apexvol.com/developers/risk-api/portfolio-greeks",
+      "markdown_url": "https://apexvol.com/developers/risk-api/portfolio-greeks.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Pro plan required"
+        ],
+        [
+          400,
+          "missing or malformed body"
+        ]
+      ]
+    },
+    {
+      "slug": "scenario-analysis",
+      "family": "risk-api",
+      "method": "POST",
+      "path": "/scenario-analysis",
+      "question": "What happens to my book if SPY drops 5% and IV rises 20% over 5 days?",
+      "one_liner": "Estimated P&L for your positions under the scenarios you specify.",
+      "summary": "For each scenario (stock move, IV change, days forward) returns the estimated P&L in dollars and percent, split into delta, vega and theta contributions, and the new portfolio value.",
+      "units": "stock_move_pct and iv_change_pct in percent; P&L in dollars.",
+      "basis": "First-order Greeks-based estimate from the Greeks you pass; not a full re-pricing.",
+      "params": [
+        {
+          "name": "positions",
+          "type": "body",
+          "default": null,
+          "bounds": "as /portfolio-greeks",
+          "required": true,
+          "meaning": "The book."
+        },
+        {
+          "name": "scenarios",
+          "type": "body",
+          "default": "[]",
+          "bounds": "array of {stock_move_pct, iv_change_pct, days_forward}",
+          "required": false,
+          "meaning": "What to test."
+        }
+      ],
+      "fields": [
+        [
+          "scenarios[].estimated_pnl, estimated_pnl_pct",
+          "The outcome."
+        ],
+        [
+          "scenarios[].delta_contribution, vega_contribution, theta_contribution",
+          "What drove it."
+        ],
+        [
+          "current_value, scenarios[].new_portfolio_value",
+          "Before and after."
+        ]
+      ],
+      "tools": [
+        "run_scenario_analysis"
+      ],
+      "prompts": [
+        "What happens to my positions if SPY falls 5% and IV jumps 20% in 5 days?",
+        "Run a +3% / -10 vol scenario on my NVDA book.",
+        "Show P&L for three scenarios on these positions."
+      ],
+      "since": "1.0",
+      "plan": "pro",
+      "docs_url": "https://apexvol.com/developers/risk-api/scenario-analysis",
+      "markdown_url": "https://apexvol.com/developers/risk-api/scenario-analysis.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Pro plan required"
+        ],
+        [
+          400,
+          "missing or malformed body"
+        ]
+      ]
+    },
+    {
+      "slug": "stress-tests",
+      "family": "risk-api",
+      "method": "POST",
+      "path": "/stress-tests",
+      "question": "How does my book hold up in a crash, a vol spike and a melt-up?",
+      "one_liner": "A standard battery of stress scenarios with estimated P&L per scenario.",
+      "summary": "Runs the fixed set of scenarios (crash, correction, vol spike, rally and more) on your positions and returns the estimated P&L and contributions for each.",
+      "units": "As /scenario-analysis.",
+      "basis": "Same Greeks-based estimate as /scenario-analysis.",
+      "params": [
+        {
+          "name": "positions",
+          "type": "body",
+          "default": null,
+          "bounds": "as /portfolio-greeks",
+          "required": true,
+          "meaning": "The book."
+        }
+      ],
+      "fields": [
+        [
+          "scenarios[].scenario_name, stock_move_pct, iv_change_pct, days_forward",
+          "The scenario."
+        ],
+        [
+          "scenarios[].estimated_pnl, estimated_pnl_pct",
+          "The outcome."
+        ],
+        [
+          "current_value",
+          "Starting value."
+        ]
+      ],
+      "tools": [
+        "generate_stress_tests"
+      ],
+      "prompts": [
+        "Stress test my positions.",
+        "How much would I lose in a 10% crash with a vol spike?",
+        "Run the standard stress battery on this book."
+      ],
+      "since": "1.0",
+      "plan": "pro",
+      "docs_url": "https://apexvol.com/developers/risk-api/stress-tests",
+      "markdown_url": "https://apexvol.com/developers/risk-api/stress-tests.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Pro plan required"
+        ],
+        [
+          400,
+          "missing or malformed body"
+        ]
+      ]
+    },
+    {
+      "slug": "earnings-calendar",
+      "family": "events-calendar-api",
+      "method": "GET",
+      "path": "/earnings-calendar",
+      "question": "Who reports this week, and which names have the biggest move priced in?",
+      "one_liner": "Upcoming reports with the implied move next to the historical average.",
+      "summary": "Lists reports over the next days_ahead with timing, estimates, the implied earnings move, the average move over the last twelve reports and the ratio of the two, plus a day grid for display.",
+      "units": "implied_move and hist_avg_move in percent (expected absolute move); market_cap in dollars.",
+      "basis": "implied_move is the feed's one-sigma figure times 0.8 so it shares hist_avg_move's basis; implied_move_basis says so and implied_move_sigma keeps the raw figure.",
+      "params": [
+        {
+          "name": "days_ahead",
+          "type": "query",
+          "default": 7,
+          "bounds": "1 to 90",
+          "required": false,
+          "meaning": "How far ahead to look."
+        }
+      ],
+      "fields": [
+        [
+          "earnings[].symbol, company_name, date, timing",
+          "Who and when."
+        ],
+        [
+          "earnings[].implied_move, hist_avg_move, move_ratio",
+          "Priced versus typical."
+        ],
+        [
+          "earnings[].eps_estimate, revenue_estimate, market_cap, sector",
+          "Context."
+        ],
+        [
+          "total_count, from_date, to_date",
+          "The window."
+        ]
+      ],
+      "tools": [
+        "get_earnings_calendar"
+      ],
+      "prompts": [
+        "Who reports earnings this week with the biggest implied move?",
+        "List next week's large-cap earnings.",
+        "Which reports in the next 3 days have a move ratio above 1.2?"
+      ],
+      "since": "1.0",
+      "plan": "basic",
+      "docs_url": "https://apexvol.com/developers/events-calendar-api/earnings-calendar",
+      "markdown_url": "https://apexvol.com/developers/events-calendar-api/earnings-calendar.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "economic-calendar",
+      "family": "events-calendar-api",
+      "method": "GET",
+      "path": "/economic-calendar",
+      "question": "When are CPI, FOMC and the jobs report over the next two weeks?",
+      "one_liner": "The macro event calendar with impact, estimate, previous and actual.",
+      "summary": "Returns scheduled macro events with date, time, impact level, estimate, previous and actual once released, grouped by date and as a flat list.",
+      "units": "Values in the event's own unit (unit field); times are US Eastern.",
+      "basis": "Economic calendar feed; country defaults to US.",
+      "params": [
+        {
+          "name": "from_date",
+          "type": "query",
+          "default": "today",
+          "bounds": "YYYY-MM-DD",
+          "required": false,
+          "meaning": "Start."
+        },
+        {
+          "name": "to_date",
+          "type": "query",
+          "default": "+14 days",
+          "bounds": "YYYY-MM-DD",
+          "required": false,
+          "meaning": "End."
+        },
+        {
+          "name": "country",
+          "type": "query",
+          "default": "US",
+          "bounds": "ISO country",
+          "required": false,
+          "meaning": "Which calendar."
+        }
+      ],
+      "fields": [
+        [
+          "events[].event, date, time, impact",
+          "What and when."
+        ],
+        [
+          "events[].estimate, previous, actual, unit",
+          "The numbers."
+        ],
+        [
+          "high_count, medium_count",
+          "How busy the window is."
+        ],
+        [
+          "by_date",
+          "Events grouped per day."
+        ]
+      ],
+      "tools": [
+        "get_economic_calendar"
+      ],
+      "prompts": [
+        "When is the next FOMC and CPI?",
+        "What high-impact macro events are scheduled this week?",
+        "Is there a jobs report before SPY's Friday expiration?"
+      ],
+      "since": "1.0",
+      "plan": "basic",
+      "docs_url": "https://apexvol.com/developers/events-calendar-api/economic-calendar",
+      "markdown_url": "https://apexvol.com/developers/events-calendar-api/economic-calendar.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "seasonality",
+      "family": "events-calendar-api",
+      "method": "GET",
+      "path": "/seasonality/{ticker}",
+      "question": "Which months have historically been strongest and weakest for NVDA?",
+      "one_liner": "Average and median returns and volatility by month and quarter.",
+      "summary": "Returns per-month and per-quarter average and median returns with the sample size and volatility over the requested years, plus the best and worst months.",
+      "units": "Returns and volatility in percent.",
+      "basis": "Monthly close-to-close returns over analysis_years.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        },
+        {
+          "name": "years",
+          "type": "query",
+          "default": 3,
+          "bounds": "1 to 10",
+          "required": false,
+          "meaning": "History length."
+        }
+      ],
+      "fields": [
+        [
+          "monthly_seasonality.<month>.avg_return_pct, median_return_pct, volatility_pct, sample_size",
+          "Per month."
+        ],
+        [
+          "quarterly_seasonality.<quarter>",
+          "Per quarter."
+        ],
+        [
+          "best_month, worst_month",
+          "The extremes."
+        ]
+      ],
+      "tools": [
+        "get_earnings_move_analysis"
+      ],
+      "prompts": [
+        "What is NVDA's seasonality by month?",
+        "Is September usually weak for SPY?",
+        "Which quarter has been best for AAPL over 5 years?"
+      ],
+      "since": "1.0",
+      "plan": "pro",
+      "docs_url": "https://apexvol.com/developers/events-calendar-api/seasonality",
+      "markdown_url": "https://apexvol.com/developers/events-calendar-api/seasonality.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Pro plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "market-overview",
+      "family": "screeners-api",
+      "method": "GET",
+      "path": "/market-overview",
+      "question": "What is the volatility regime across the market today?",
+      "one_liner": "Market-wide vol stats, sector heatmap, index prices, breadth, movers and earnings this week.",
+      "summary": "One call with the average IV and VRP across the universe, the regime label, a sector heatmap, ETF heatmap, index levels, rates, put skew, vol breadth, top movers, unusual activity and the IV-versus-HV outliers.",
+      "units": "IVs in percentage points; VRP in points; changes in percent; yields in percent; OI and volume in contracts.",
+      "basis": "Bulk daily data across the covered universe.",
+      "params": [],
+      "fields": [
+        [
+          "market_stats.market_regime, avg_iv30d, avg_vrp, pct_high_iv",
+          "The regime."
+        ],
+        [
+          "sector_heatmap[], etf_heatmap[]",
+          "By sector and ETF."
+        ],
+        [
+          "index_prices, treasury_rates",
+          "Levels and rates."
+        ],
+        [
+          "vol_breadth, put_skew",
+          "Breadth and skew across names."
+        ],
+        [
+          "top_movers[], unusual_activity[], earnings_this_week[]",
+          "The lists."
+        ]
+      ],
+      "tools": [
+        "get_market_overview"
+      ],
+      "prompts": [
+        "Give me a market volatility overview for this morning.",
+        "Which sectors have the highest IV right now?",
+        "Is the market in a high-vol regime?"
+      ],
+      "since": "1.0",
+      "plan": "premium",
+      "docs_url": "https://apexvol.com/developers/screeners-api/market-overview",
+      "markdown_url": "https://apexvol.com/developers/screeners-api/market-overview.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Premium plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "relative-value-scan",
+      "family": "screeners-api",
+      "method": "GET",
+      "path": "/relative-value-scan",
+      "question": "Whose IV is stretched versus SPY, and which pairs look rich against cheap?",
+      "one_liner": "Market-wide IV-to-SPY mean-reversion stretches, or rich-versus-cheap pairs.",
+      "summary": "Returns names whose IV ratio to SPY is far from its one-year average (z-score above the threshold) with the direction, or a pairs view of rich against cheap names.",
+      "units": "iv_percentile 0 to 100; ratios unitless; z_score in standard deviations; vrp in points.",
+      "basis": "iv_spy_ratio is 30-day IV divided by SPY's; the average is one year.",
+      "params": [
+        {
+          "name": "view",
+          "type": "query",
+          "default": "mean_reversion",
+          "bounds": "mean_reversion or pairs",
+          "required": false,
+          "meaning": "Which scan."
+        },
+        {
+          "name": "limit",
+          "type": "query",
+          "default": 20,
+          "bounds": "1 to 50",
+          "required": false,
+          "meaning": "Rows."
+        },
+        {
+          "name": "threshold",
+          "type": "query",
+          "default": 1.5,
+          "bounds": "z-score",
+          "required": false,
+          "meaning": "Minimum stretch."
+        }
+      ],
+      "fields": [
+        [
+          "results[].ticker, iv_spy_ratio, iv_spy_ratio_avg_1y, z_score, direction",
+          "The stretch."
+        ],
+        [
+          "results[].iv_percentile, vrp, days_to_earnings",
+          "Context."
+        ],
+        [
+          "total_matches, total_scanned, threshold",
+          "What ran."
+        ]
+      ],
+      "tools": [
+        "scan_relative_value"
+      ],
+      "prompts": [
+        "Which stocks have IV stretched relative to SPY?",
+        "Find rich-versus-cheap vol pairs.",
+        "Show relative-value stretches above 2 standard deviations."
+      ],
+      "since": "1.0",
+      "plan": "pro",
+      "docs_url": "https://apexvol.com/developers/screeners-api/relative-value-scan",
+      "markdown_url": "https://apexvol.com/developers/screeners-api/relative-value-scan.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Pro plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "screen",
+      "family": "screeners-api",
+      "method": "GET",
+      "path": "/screen",
+      "question": "Which stocks have the highest IV rank right now?",
+      "one_liner": "Preset screens over the whole universe: high IV rank, high VRP, earnings this week, skew, contango and more.",
+      "summary": "Runs one of the preset screens over the covered universe in one or two bulk calls and returns the matching rows with price, IV, realized vol, VRP, skew percentile, earnings timing and market cap. screen_type=list returns the catalog.",
+      "units": "iv30d, iv60d, hv20d in percentage points; vrp in points; chg_1w and chg_1m in percent; market_cap in dollars.",
+      "basis": "Daily bulk data from the feed; iv_percentile is the one-year figure.",
+      "params": [
+        {
+          "name": "screen_type",
+          "type": "query",
+          "default": "high_iv_rank",
+          "bounds": "high_iv_rank, low_iv_rank, high_vrp, earnings_this_week, high_skew, steep_contango, mean_reversion, vol_pairs, decorrelation, unusual_volume, pin_risk, list",
+          "required": false,
+          "meaning": "Which preset."
+        },
+        {
+          "name": "limit",
+          "type": "query",
+          "default": 20,
+          "bounds": "1 to 200",
+          "required": false,
+          "meaning": "Rows."
+        },
+        {
+          "name": "min_market_cap",
+          "type": "query",
+          "default": 1000000000,
+          "bounds": "dollars",
+          "required": false,
+          "meaning": "Floor on size."
+        },
+        {
+          "name": "exclude_earnings_days",
+          "type": "query",
+          "default": 0,
+          "bounds": "0 to 60",
+          "required": false,
+          "meaning": "Drop names reporting within N days."
+        }
+      ],
+      "fields": [
+        [
+          "results[].ticker, price, iv30d, hv20d, vrp, iv_percentile",
+          "The row."
+        ],
+        [
+          "results[].skew_pctile, contango, days_to_earnings, imp_earn_move",
+          "Extra columns per screen."
+        ],
+        [
+          "screen_name, screen_description, total_scanned, universe_size",
+          "What ran."
+        ]
+      ],
+      "tools": [
+        "screen_market"
+      ],
+      "prompts": [
+        "Screen for the highest IV rank stocks over 5 billion market cap.",
+        "Which names have the richest premium over realized this week?",
+        "List the available screens."
+      ],
+      "since": "1.0",
+      "plan": "premium",
+      "docs_url": "https://apexvol.com/developers/screeners-api/screen",
+      "markdown_url": "https://apexvol.com/developers/screeners-api/screen.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Premium plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "vol-arb-scan",
+      "family": "screeners-api",
+      "method": "GET",
+      "path": "/vol-arb-scan",
+      "question": "Are there mispriced butterflies or skew trades on SPY right now?",
+      "one_liner": "Cross-strike checks: butterfly mispricings, skew trades, calendars and parity violations.",
+      "summary": "Scans the chain of one ticker for butterflies priced below fair, skew trades between ATM and OTM IV, calendar-spread opportunities and put-call parity violations, with the edge for each.",
+      "units": "Option prices in dollars; IVs in percentage points (iv_unit); edge_pct in percent.",
+      "basis": "Model fair values from the chain IV; each row states its strategy and type.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "query",
+          "default": "SPY",
+          "bounds": "symbol",
+          "required": false,
+          "meaning": "Which chain to scan."
+        }
+      ],
+      "fields": [
+        [
+          "butterfly_mispricings[].lower_strike, middle_strike, upper_strike, butterfly_cost, edge",
+          "Butterflies."
+        ],
+        [
+          "skew_trades[].atm_iv, otm_iv, skew, strategy",
+          "Skew trades."
+        ],
+        [
+          "calendar_spreads[], put_call_parity_violations[]",
+          "The other checks."
+        ],
+        [
+          "total_opportunities",
+          "Count."
+        ]
+      ],
+      "tools": [
+        "scan_volatility_arb"
+      ],
+      "prompts": [
+        "Scan SPY for volatility arbitrage.",
+        "Any mispriced butterflies on NVDA this week?",
+        "Show skew trades on QQQ."
+      ],
+      "since": "1.0",
+      "plan": "pro",
+      "docs_url": "https://apexvol.com/developers/screeners-api/vol-arb-scan",
+      "markdown_url": "https://apexvol.com/developers/screeners-api/vol-arb-scan.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Pro plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "borrow-rate",
+      "family": "stock-analytics-api",
+      "method": "GET",
+      "path": "/borrow-rate/{ticker}",
+      "question": "Is NVDA hard to borrow, and is the borrow rate spiking?",
+      "one_liner": "Borrow-rate level, class, percentile and the time series with spike detection.",
+      "summary": "Returns the current 30-day and 2-year borrow rates, the class and percentile, a squeeze score, spike detection with severity, sector comparison and the daily series.",
+      "units": "Borrow rates in percent per year; percentiles 0 to 100.",
+      "basis": "Options-implied borrow from the data feed; spikes are z-scores against the trailing series.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        },
+        {
+          "name": "days",
+          "type": "query",
+          "default": 252,
+          "bounds": "20 to 1000",
+          "required": false,
+          "meaning": "History length."
+        }
+      ],
+      "fields": [
+        [
+          "current.borrow30, borrow2yr, borrow_class, borrow_pctile",
+          "The rate now."
+        ],
+        [
+          "spike_detected, spike_severity, squeeze_score",
+          "The alert."
+        ],
+        [
+          "sector_comparison",
+          "Versus the sector."
+        ],
+        [
+          "timeseries[].date, borrow30, is_spike",
+          "The history."
+        ]
+      ],
+      "tools": [
+        "get_ticker_analytics"
+      ],
+      "prompts": [
+        "Is NVDA hard to borrow right now?",
+        "Which of my shorts has a borrow spike?",
+        "Show the borrow rate history for GME."
+      ],
+      "since": "1.0",
+      "plan": "premium",
+      "docs_url": "https://apexvol.com/developers/stock-analytics-api/borrow-rate",
+      "markdown_url": "https://apexvol.com/developers/stock-analytics-api/borrow-rate.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Premium plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "cores",
+      "family": "stock-analytics-api",
+      "method": "GET",
+      "path": "/cores/{ticker}",
+      "question": "What is in the raw analytics row the platform screens NVDA on?",
+      "one_liner": "The curated subset (or all 340+) of the pre-computed analytics fields for a ticker.",
+      "summary": "Returns the data feed's analytics row: IV summaries, IV and HV statistics, slope and contango, earnings-move components, borrow rates, betas and percentiles. Defaults to the curated 45-field subset the platform screens on; ask for specific fields or all.",
+      "units": "Vendor units: IVs and HVs in percentage points, price changes in percentage points, borrow in percent, market cap in dollars. The row contains a numeric field named error, a model-fit statistic, not a failure.",
+      "basis": "Vendor field names are returned as-is (iv30d, clsHv20d, ivPctile1y, slope, contango and so on).",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        },
+        {
+          "name": "fields",
+          "type": "query",
+          "default": "curated subset",
+          "bounds": "CSV of field names, or all",
+          "required": false,
+          "meaning": "Which fields to return."
+        }
+      ],
+      "fields": [
+        [
+          "iv30d, iv60d, ivPctile1y, exErnIv30d",
+          "IV summaries."
+        ],
+        [
+          "clsHv20d, orHv20d, ivHvXernRatio",
+          "Realized vol and the ratio."
+        ],
+        [
+          "slope, contango, dlt25Iv30d, dlt75Iv30d",
+          "Skew and term."
+        ],
+        [
+          "impErnMv, absAvgErnMv, nextErn, daysToNextErn",
+          "Earnings."
+        ],
+        [
+          "borrow30, beta1y, correlSpy1y, mktCap",
+          "The rest."
+        ]
+      ],
+      "tools": [
+        "get_orats_cores"
+      ],
+      "prompts": [
+        "Pull the cores row for NVDA.",
+        "Give me iv30d, clsHv20d and slope for AAPL from cores.",
+        "What is exErnIv30d versus iv30d on TSLA?"
+      ],
+      "since": "1.0",
+      "plan": "pro",
+      "docs_url": "https://apexvol.com/developers/stock-analytics-api/cores",
+      "markdown_url": "https://apexvol.com/developers/stock-analytics-api/cores.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Pro plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "correlation",
+      "family": "stock-analytics-api",
+      "method": "GET",
+      "path": "/correlation/{ticker}",
+      "question": "How tightly does NVDA track SPY and its sector ETF?",
+      "one_liner": "Correlation and beta to SPY and the best-matching sector ETF over one month and one year.",
+      "summary": "Returns one-month and one-year correlation and beta to SPY and to the best sector ETF, with the IV-to-SPY ratio.",
+      "units": "Correlations -1 to 1; beta unitless.",
+      "basis": "Daily returns; best_etf is chosen by fit.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        }
+      ],
+      "fields": [
+        [
+          "correlations.spy_1m, spy_1y, etf_1m, etf_1y",
+          "The correlations."
+        ],
+        [
+          "beta.beta_1m, beta_1y",
+          "The betas."
+        ],
+        [
+          "best_etf, sector, iv_spy_ratio",
+          "Context."
+        ]
+      ],
+      "tools": [
+        "get_ticker_analytics"
+      ],
+      "prompts": [
+        "What is NVDA's beta and correlation to SPY?",
+        "Which ETF tracks AMD best?",
+        "Has AAPL's correlation to the market dropped this month?"
+      ],
+      "since": "1.0",
+      "plan": "premium",
+      "docs_url": "https://apexvol.com/developers/stock-analytics-api/correlation",
+      "markdown_url": "https://apexvol.com/developers/stock-analytics-api/correlation.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Premium plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "correlation-compare",
+      "family": "stock-analytics-api",
+      "method": "GET",
+      "path": "/correlation/{ticker}/compare/{ticker2}",
+      "question": "How correlated are NVDA and AMD, and has it changed?",
+      "one_liner": "Pairwise correlation and beta between two tickers through time.",
+      "summary": "Returns a daily series of one-month and one-year correlation and one-month beta between the two tickers.",
+      "units": "Correlations -1 to 1; beta unitless.",
+      "basis": "Daily returns over days of history.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        },
+        {
+          "name": "ticker2",
+          "type": "path",
+          "default": null,
+          "bounds": "symbol",
+          "required": true,
+          "meaning": "The second ticker."
+        },
+        {
+          "name": "days",
+          "type": "query",
+          "default": 400,
+          "bounds": "20 to 1000",
+          "required": false,
+          "meaning": "History length."
+        }
+      ],
+      "fields": [
+        [
+          "timeseries[].date, correl1m, correl1y, beta1m",
+          "The pair through time."
+        ],
+        [
+          "ticker1, ticker2",
+          "Echo."
+        ]
+      ],
+      "tools": [
+        "get_ticker_analytics"
+      ],
+      "prompts": [
+        "How correlated are NVDA and AMD?",
+        "Show the correlation between XOM and CVX over the last year.",
+        "Has the SPY-QQQ correlation broken down recently?"
+      ],
+      "since": "1.0",
+      "plan": "premium",
+      "docs_url": "https://apexvol.com/developers/stock-analytics-api/correlation-compare",
+      "markdown_url": "https://apexvol.com/developers/stock-analytics-api/correlation-compare.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Premium plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "dividend",
+      "family": "stock-analytics-api",
+      "method": "GET",
+      "path": "/dividend/{ticker}",
+      "question": "What does AAPL pay, when is the next ex-date, and does the options market agree?",
+      "one_liner": "Dividend history, yield, growth and the options-implied dividend against the actual.",
+      "summary": "Returns the current dividend amount, frequency, yield and growth, the implied dividend from options versus the declared one, the next ex-date and the payment history.",
+      "units": "Amounts in dollars per share; yields and growth in percent.",
+      "basis": "Implied dividend from put-call parity on the chain; history from the data feed.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        }
+      ],
+      "fields": [
+        [
+          "current.div_amount, div_freq, div_yield, next_div_date",
+          "The dividend now."
+        ],
+        [
+          "current.annual_implied, annual_actual, implied_vs_actual",
+          "What options imply versus what is paid."
+        ],
+        [
+          "history[].ex_date, pay_date, amount",
+          "Past payments."
+        ],
+        [
+          "cagr, pays_dividends",
+          "Growth and flag."
+        ]
+      ],
+      "tools": [
+        "get_ticker_analytics"
+      ],
+      "prompts": [
+        "When is AAPL's next ex-dividend date and how much?",
+        "Does the options market imply a dividend cut for XOM?",
+        "Show MSFT's dividend history and growth."
+      ],
+      "since": "1.0",
+      "plan": "premium",
+      "docs_url": "https://apexvol.com/developers/stock-analytics-api/dividend",
+      "markdown_url": "https://apexvol.com/developers/stock-analytics-api/dividend.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Premium plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "price-context",
+      "family": "stock-analytics-api",
+      "method": "GET",
+      "path": "/price-context/{ticker}",
+      "question": "Where is NVDA in its range, how is momentum, and how does IV compare with the move?",
+      "one_liner": "Multi-timeframe returns, range position, momentum regime, vol regime and flow sentiment in one row.",
+      "summary": "A single flat payload with price and returns over 1 week to 1 year, the 52-week range position, momentum and vol regime labels, IV, realized vol, VRP, earnings timing and option activity, plus a plain-language quick take.",
+      "units": "Returns and changes in percent; IV and HV in percentage points; vrp in points; volumes in shares or contracts.",
+      "basis": "Daily bulk data from the feed; iv_30d is the 30-day constant-maturity IV.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        }
+      ],
+      "fields": [
+        [
+          "price, return_1w, return_1m, return_6m, return_1y",
+          "Performance."
+        ],
+        [
+          "range_position, pct_from_high, pct_from_low",
+          "Where in the 52-week range."
+        ],
+        [
+          "momentum_regime, vol_regime, flow_sentiment",
+          "Labels with colors."
+        ],
+        [
+          "iv_30d, hv_20d, vrp, iv_pctile_1y",
+          "Vol context."
+        ],
+        [
+          "quick_take, essentials_summary",
+          "The sentence version."
+        ]
+      ],
+      "tools": [
+        "get_ticker_analytics"
+      ],
+      "prompts": [
+        "Give me price context on NVDA: range, momentum and vol.",
+        "Where is AAPL in its 52-week range?",
+        "Summarise TSLA in one paragraph with the numbers."
+      ],
+      "since": "1.0",
+      "plan": "basic",
+      "docs_url": "https://apexvol.com/developers/stock-analytics-api/price-context",
+      "markdown_url": "https://apexvol.com/developers/stock-analytics-api/price-context.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "relative-value",
+      "family": "stock-analytics-api",
+      "method": "GET",
+      "path": "/relative-value/{ticker}",
+      "question": "Is NVDA's IV rich or cheap relative to SPY and its sector?",
+      "one_liner": "IV percentile versus SPY and the sector ETF with mean-reversion z-scores.",
+      "summary": "Returns the IV ratios to SPY and the sector ETF with their one-month and one-year averages, percentiles, z-scores, sigma bands, a signal and the ratio time series.",
+      "units": "IVs in percentage points; ratios unitless; percentiles 0 to 100; vrp in points.",
+      "basis": "Ratios use 30-day IV. The signal compares the current ratio to its one-year distribution.",
+      "params": [
+        {
+          "name": "ticker",
+          "type": "path",
+          "default": null,
+          "bounds": "any covered symbol",
+          "required": true,
+          "meaning": "The underlying, upper case. Use /search to check coverage."
+        },
+        {
+          "name": "days",
+          "type": "query",
+          "default": 252,
+          "bounds": "20 to 1000",
+          "required": false,
+          "meaning": "History length for the series."
+        }
+      ],
+      "fields": [
+        [
+          "signal",
+          "RICH, CHEAP or NEUTRAL versus the market."
+        ],
+        [
+          "ratios.iv_spy_ratio, iv_spy_ratio_avg_1y, iv_etf_ratio",
+          "The ratios."
+        ],
+        [
+          "z_scores.spy_ratio_z, etf_ratio_z, percentiles",
+          "How stretched."
+        ],
+        [
+          "timeseries[]",
+          "The ratios through time."
+        ]
+      ],
+      "tools": [
+        "get_ticker_analytics"
+      ],
+      "prompts": [
+        "Is NVDA IV rich or cheap versus SPY?",
+        "How does AAPL's IV compare with the tech sector ETF?",
+        "Show the IV-to-SPY ratio history for TSLA."
+      ],
+      "since": "1.0",
+      "plan": "pro",
+      "docs_url": "https://apexvol.com/developers/stock-analytics-api/relative-value",
+      "markdown_url": "https://apexvol.com/developers/stock-analytics-api/relative-value.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Pro plan required"
+        ],
+        [
+          424,
+          "data feed unavailable, retry"
+        ]
+      ]
+    },
+    {
+      "slug": "iv-rank-batch",
+      "family": "implied-volatility-api",
+      "method": "GET",
+      "path": "/batch/iv-rank",
+      "question": "What is the IV rank of every name on my watchlist, in one call?",
+      "one_liner": "IV rank and percentile for up to 25 symbols in a single request.",
+      "summary": "Returns the same IV rank payload as the single endpoint for each symbol in tickers, keyed by symbol under results. A symbol the feed cannot price lands in errors with its reason and never fails the others. The call spends one rate-limit unit however many symbols it names; the monthly allowance is spent per symbol, exactly as if each were called alone. Built for watchlist screens and morning briefs that used to take one request per name.",
+      "units": "IV values are annualised percentage points, declared by iv_units on every symbol's payload. IV rank and percentile are 0 to 100.",
+      "basis": "Per symbol, identical to /iv-rank/{ticker}: the 30-day constant-maturity implied vol ranked against its own lookback_days history; the percentile is the vendor's one-year figure.",
+      "params": [
+        {
+          "name": "tickers",
+          "type": "query",
+          "default": null,
+          "bounds": "1 to 25 symbols, comma-separated",
+          "required": true,
+          "meaning": "The underlyings, upper case, duplicates dropped. A symbol with no listed options answers 404 for the whole call and names the symbol."
+        },
+        {
+          "name": "lookback_days",
+          "type": "query",
+          "default": 252,
+          "bounds": "20 to 1260",
+          "required": false,
+          "meaning": "Trading days of history the rank is measured against, applied to every symbol."
+        }
+      ],
+      "fields": [
+        [
+          "tickers, requested, succeeded, failed",
+          "The symbols asked for and how many answered."
+        ],
+        [
+          "results.{SYMBOL}",
+          "The single-endpoint payload for that symbol: iv_rank, iv_percentile, current_iv, iv_max_52w, iv_min_52w, iv_units."
+        ],
+        [
+          "errors.{SYMBOL}",
+          "Why a symbol is missing from results, in plain words."
+        ],
+        [
+          "note",
+          "Reminds a client how the call is metered."
+        ]
+      ],
+      "tools": [
+        "get_iv_rank"
+      ],
+      "prompts": [
+        "What is the IV rank of SPY, QQQ and IWM right now?",
+        "Rank my watchlist by IV rank, highest first.",
+        "Which of AAPL, MSFT, NVDA and AMD has the cheapest implied vol for the year?"
+      ],
+      "since": "1.19",
+      "plan": "premium",
+      "docs_url": "https://apexvol.com/developers/implied-volatility-api/iv-rank-batch",
+      "markdown_url": "https://apexvol.com/developers/implied-volatility-api/iv-rank-batch.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Premium plan required"
+        ],
+        [
+          424,
+          "no symbol in the batch returned data"
+        ]
+      ]
+    },
+    {
+      "slug": "gex-batch",
+      "family": "gamma-exposure-api",
+      "method": "GET",
+      "path": "/batch/gex",
+      "question": "Where are the gamma flip, call wall and put wall for several indexes at once?",
+      "one_liner": "Dealer gamma exposure levels for up to 25 symbols in a single request.",
+      "summary": "Returns the gamma exposure payload of the single endpoint for each symbol in tickers, keyed by symbol under results: total GEX, the flip level, the call and put walls, the implications block and the strike profile windowed to ten strikes each side of spot unless strikes_around says otherwise. A symbol the feed cannot answer lands in errors and never fails the others. One rate-limit unit per call; the monthly allowance is spent per symbol. The morning regime read across SPY, QQQ and IWM is one request instead of three.",
+      "units": "GEX in dollars of gamma per 1 percent move; strikes and levels in the underlying's price.",
+      "basis": "Per symbol, identical to /gex/{ticker}: the vendor's per-strike gamma times open interest, calls positive and puts negative, aggregated across expirations unless expiration is given.",
+      "params": [
+        {
+          "name": "tickers",
+          "type": "query",
+          "default": null,
+          "bounds": "1 to 25 symbols, comma-separated",
+          "required": true,
+          "meaning": "The underlyings, upper case, duplicates dropped. A symbol with no listed options answers 404 for the whole call and names the symbol."
+        },
+        {
+          "name": "expiration",
+          "type": "query",
+          "default": null,
+          "bounds": "YYYY-MM-DD",
+          "required": false,
+          "meaning": "One expiration instead of the aggregate, applied to every symbol."
+        },
+        {
+          "name": "aggregate",
+          "type": "query",
+          "default": "true",
+          "bounds": "true or false",
+          "required": false,
+          "meaning": "Aggregate across expirations."
+        },
+        {
+          "name": "strikes_around",
+          "type": "query",
+          "default": 10,
+          "bounds": "0 to 500",
+          "required": false,
+          "meaning": "Strikes kept each side of spot in the profile lists under compact detail. 0 keeps every strike."
+        },
+        {
+          "name": "detail",
+          "type": "query",
+          "default": "compact for MCP clients, full for REST",
+          "bounds": "compact or full",
+          "required": false,
+          "meaning": "full returns every strike for every symbol."
+        }
+      ],
+      "fields": [
+        [
+          "tickers, requested, succeeded, failed",
+          "The symbols asked for and how many answered."
+        ],
+        [
+          "results.{SYMBOL}.total_gex, flip_level",
+          "Net dealer gamma and the price where it changes sign."
+        ],
+        [
+          "results.{SYMBOL}.key_levels",
+          "call_wall, put_wall, key_strike and max_pain."
+        ],
+        [
+          "results.{SYMBOL}.gex_by_strike[]",
+          "The per-strike profile inside the window."
+        ],
+        [
+          "results.{SYMBOL}.window",
+          "What the window kept and whether it truncated."
+        ],
+        [
+          "errors.{SYMBOL}",
+          "Why a symbol is missing from results."
+        ]
+      ],
+      "tools": [
+        "get_gex"
+      ],
+      "prompts": [
+        "Give me the gamma flip and walls for SPY, QQQ and IWM in one go.",
+        "Which of the big indexes is in negative gamma this morning?",
+        "Compare dealer positioning across SPY, QQQ, IWM and DIA."
+      ],
+      "since": "1.19",
+      "plan": "premium",
+      "docs_url": "https://apexvol.com/developers/gamma-exposure-api/gex-batch",
+      "markdown_url": "https://apexvol.com/developers/gamma-exposure-api/gex-batch.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Premium plan required"
+        ],
+        [
+          424,
+          "no symbol in the batch returned data"
+        ]
+      ]
+    },
+    {
+      "slug": "expected-move-batch",
+      "family": "earnings-expected-move-api",
+      "method": "GET",
+      "path": "/batch/expected-move",
+      "question": "How much is the market pricing each of these names to move by the next expiration?",
+      "one_liner": "Straddle-implied expected move for up to 25 symbols in a single request.",
+      "summary": "Returns the expected move payload of the single endpoint for each symbol in tickers, keyed by symbol under results: the expiration used, days to expiry, spot, the move in dollars and in percent, and the implied range. Without expiration each symbol uses its own nearest expiration after today, so the horizons can differ across a mixed list; pass expiration to line them up. A symbol with no two-sided ATM straddle lands in errors and never fails the others. One rate-limit unit per call; the monthly allowance is spent per symbol.",
+      "units": "expected_move_dollars in the underlying's price; expected_move_percent in percentage points (1.91 means 1.91 percent).",
+      "basis": "Per symbol, identical to /expected-move/{ticker}: the at-the-money straddle mid price for the expiration, taken as one standard deviation, against the live spot rather than the expiration's forward.",
+      "params": [
+        {
+          "name": "tickers",
+          "type": "query",
+          "default": null,
+          "bounds": "1 to 25 symbols, comma-separated",
+          "required": true,
+          "meaning": "The underlyings, upper case, duplicates dropped. A symbol with no listed options answers 404 for the whole call and names the symbol."
+        },
+        {
+          "name": "expiration",
+          "type": "query",
+          "default": "each symbol's nearest expiration after today",
+          "bounds": "YYYY-MM-DD",
+          "required": false,
+          "meaning": "One expiration for every symbol, so the moves share a horizon."
+        }
+      ],
+      "fields": [
+        [
+          "tickers, requested, succeeded, failed",
+          "The symbols asked for and how many answered."
+        ],
+        [
+          "results.{SYMBOL}.expiration, dte",
+          "The expiration priced and its days to expiry."
+        ],
+        [
+          "results.{SYMBOL}.expected_move_dollars, expected_move_percent",
+          "The one standard deviation move."
+        ],
+        [
+          "results.{SYMBOL}.lower_bound, upper_bound",
+          "Spot minus and plus the move."
+        ],
+        [
+          "errors.{SYMBOL}",
+          "Why a symbol is missing from results."
+        ]
+      ],
+      "tools": [
+        "calculate_expected_move"
+      ],
+      "prompts": [
+        "What are the expected moves for SPY, AAPL and NVDA into Friday?",
+        "Which of my earnings names has the biggest implied move this week?",
+        "Give me the implied ranges for the Mag 7 through the monthly expiration."
+      ],
+      "since": "1.19",
+      "plan": "premium",
+      "docs_url": "https://apexvol.com/developers/earnings-expected-move-api/expected-move-batch",
+      "markdown_url": "https://apexvol.com/developers/earnings-expected-move-api/expected-move-batch.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "Premium plan required"
+        ],
+        [
+          424,
+          "no symbol in the batch returned data"
+        ]
+      ]
+    },
+    {
+      "slug": "me-usage",
+      "family": "options-chain-api",
+      "method": "GET",
+      "path": "/me/usage",
+      "question": "How much of my monthly API allowance is left, and which endpoints have I been calling?",
+      "one_liner": "Your own meter: month used, allowance, remaining, reset time and calls by endpoint.",
+      "summary": "Returns the calling account's usage for the current month in the same unit the allowance is enforced in: data requests used, the plan's allowance, what remains and when the counter resets. It adds the live rate-limit position for this token, the number of calls per endpoint this month with each endpoint's docs page, the count of active tokens on the account, and the unknown paths this token has hit in the last seven days, which is the quickest way to spot a client built against a path that does not exist. The same numbers appear on the account page. The call costs nothing against the allowance.",
+      "units": "used, limit and remaining count upstream data requests, not API calls; one call can spend more than one and a cached call spends none. Times are ISO 8601 in UTC.",
+      "basis": "The account's counter is the one the 429 budget gate reads; per-endpoint counts come from the per-month usage hash the account page also shows. Integration tokens issued by an admin have no allowance and report limit null.",
+      "params": [],
+      "fields": [
+        [
+          "used, limit, remaining, percent_used",
+          "The month's meter. limit is null for an admin-issued integration token."
+        ],
+        [
+          "resets_at",
+          "When the counter returns to zero: the first of next month, UTC."
+        ],
+        [
+          "rate_limits",
+          "per_minute, per_hour and what remains of each for this token right now."
+        ],
+        [
+          "calls_this_month, endpoints[]",
+          "Calls per endpoint rule, most-called first, each with its docs page."
+        ],
+        [
+          "tokens_active",
+          "Active tokens on the account, this one included."
+        ],
+        [
+          "this_token.unknown_paths_7d",
+          "Paths under /api/mcp/data that 404d for this token in the last seven days, with counts."
+        ]
+      ],
+      "tools": [],
+      "prompts": [
+        "How much of my ApexVol API allowance is left this month?",
+        "Which endpoints have I called most this month?",
+        "When does my API usage counter reset?"
+      ],
+      "since": "1.19",
+      "plan": "basic",
+      "docs_url": "https://apexvol.com/developers/options-chain-api/me-usage",
+      "markdown_url": "https://apexvol.com/developers/options-chain-api/me-usage.md",
+      "errors": [
+        [
+          401,
+          "no or revoked token"
+        ],
+        [
+          429,
+          "Retry-After seconds"
+        ],
+        [
+          403,
+          "no active paid plan on the account"
+        ]
+      ]
+    }
+  ],
+  "tools": [
+    {
+      "name": "get_iv_rank",
+      "family": "implied-volatility-api",
+      "endpoints": [
+        "iv-rank",
+        "iv-rank-batch"
+      ],
+      "one_liner": "IV rank and percentile for a stock.",
+      "arguments": [
+        "ticker",
+        "lookback_days",
+        "tickers"
+      ],
+      "prompts": [
+        "What is NVDA's IV rank?",
+        "Is AAPL implied vol high or low for the year?",
+        "Rank my watchlist by IV rank."
+      ]
+    },
+    {
+      "name": "get_volatility_cone",
+      "family": "implied-volatility-api",
+      "endpoints": [
+        "volatility-cone"
+      ],
+      "one_liner": "Realized-vol cone against implied vol per tenor.",
+      "arguments": [
+        "ticker",
+        "periods"
+      ],
+      "prompts": [
+        "Show NVDA's vol cone.",
+        "Is 30-day IV rich to realized on AAPL?",
+        "Compare IV and realized across tenors for TSLA."
+      ]
+    },
+    {
+      "name": "get_volatility_risk_premium",
+      "family": "implied-volatility-api",
+      "endpoints": [
+        "vrp",
+        "vrp-timeseries",
+        "vrp-expirations"
+      ],
+      "one_liner": "IV minus realized, now, through time, or by expiration.",
+      "arguments": [
+        "ticker",
+        "lookback_days",
+        "view"
+      ],
+      "prompts": [
+        "What is the VRP on NVDA?",
+        "Chart AAPL's premium over realized for 3 months.",
+        "Which SPY expiration has the richest premium?"
+      ]
+    },
+    {
+      "name": "get_term_structure",
+      "family": "implied-volatility-api",
+      "endpoints": [
+        "term-structure"
+      ],
+      "one_liner": "ATM IV by expiration.",
+      "arguments": [
+        "ticker"
+      ],
+      "prompts": [
+        "Is SPY in contango?",
+        "Show NVDA's term structure.",
+        "What move is priced into each AAPL expiration?"
+      ]
+    },
+    {
+      "name": "find_iv_opportunities",
+      "family": "implied-volatility-api",
+      "endpoints": [
+        "iv-opportunities"
+      ],
+      "one_liner": "IV mean-reversion read with z-score.",
+      "arguments": [
+        "ticker",
+        "z_score_threshold"
+      ],
+      "prompts": [
+        "Is NVDA IV stretched?",
+        "Which names have an IV z-score above 2?",
+        "Will AAPL IV revert?"
+      ]
+    },
+    {
+      "name": "get_vix_snapshot",
+      "family": "implied-volatility-api",
+      "endpoints": [
+        "vix"
+      ],
+      "one_liner": "VIX level and change.",
+      "arguments": [],
+      "prompts": [
+        "Where is the VIX?",
+        "How much did the VIX move today?",
+        "Give me the VIX before SPY gamma."
+      ]
+    },
+    {
+      "name": "get_monies_surface",
+      "family": "implied-volatility-api",
+      "endpoints": [
+        "monies"
+      ],
+      "one_liner": "The smoothed vol surface, forecast or comparison.",
+      "arguments": [
+        "ticker",
+        "surface"
+      ],
+      "prompts": [
+        "Show the SPY surface by delta.",
+        "Where is the forecast surface cheap on NVDA?",
+        "What is 25-delta put IV versus ATM on AAPL?"
+      ]
+    },
+    {
+      "name": "get_options_chain",
+      "family": "options-chain-api",
+      "endpoints": [
+        "chain"
+      ],
+      "one_liner": "The options chain with quotes, IV and Greeks.",
+      "arguments": [
+        "ticker",
+        "expiration",
+        "num_expirations",
+        "strikes_around"
+      ],
+      "prompts": [
+        "Show the NVDA chain.",
+        "What are the 30-delta strikes on AAPL for October?",
+        "Pull SPY 5 strikes around spot."
+      ]
+    },
+    {
+      "name": "get_expirations",
+      "family": "options-chain-api",
+      "endpoints": [
+        "expirations"
+      ],
+      "one_liner": "Listed expirations.",
+      "arguments": [
+        "ticker"
+      ],
+      "prompts": [
+        "What expirations does NVDA have?",
+        "Is there a weekly on AAPL next Friday?",
+        "List the next 6 SPY expirations."
+      ]
+    },
+    {
+      "name": "get_options_by_delta",
+      "family": "options-chain-api",
+      "endpoints": [
+        "options-by-delta"
+      ],
+      "one_liner": "The contract nearest a target delta.",
+      "arguments": [
+        "ticker",
+        "target_delta",
+        "option_type",
+        "expiration"
+      ],
+      "prompts": [
+        "Which NVDA call is closest to 30 delta?",
+        "Find the 20-delta SPY put for October.",
+        "What is the mid on the 16-delta AAPL call?"
+      ]
+    },
+    {
+      "name": "get_stock_price",
+      "family": "options-chain-api",
+      "endpoints": [
+        "stock"
+      ],
+      "one_liner": "Price and company stats.",
+      "arguments": [
+        "ticker"
+      ],
+      "prompts": [
+        "What is NVDA trading at?",
+        "Give me AAPL's price and market cap.",
+        "Which sector is AMD in?"
+      ]
+    },
+    {
+      "name": "get_historical_chain",
+      "family": "options-chain-api",
+      "endpoints": [
+        "chain-at-time"
+      ],
+      "one_liner": "The chain as priced on a past day.",
+      "arguments": [
+        "ticker",
+        "expiration",
+        "trade_date"
+      ],
+      "prompts": [
+        "Show the SPY chain as of 14 August.",
+        "What was the NVDA 200 call IV before earnings?",
+        "Pull last Friday's AAPL chain."
+      ]
+    },
+    {
+      "name": "simulate_option_chain",
+      "family": "strategies-api",
+      "endpoints": [
+        "simulate-chain"
+      ],
+      "one_liner": "Re-price a chain at a hypothetical spot, DTE and IV.",
+      "arguments": [
+        "ticker",
+        "sim_price",
+        "sim_dte",
+        "iv_adjustment",
+        "expiration"
+      ],
+      "prompts": [
+        "Re-price SPY at 790 with 10 days left.",
+        "What would my NVDA calls be worth after a 5% drop?",
+        "Simulate AAPL 3% higher."
+      ]
+    },
+    {
+      "name": "search_tickers",
+      "family": "options-chain-api",
+      "endpoints": [
+        "search"
+      ],
+      "one_liner": "Resolve names to covered symbols.",
+      "arguments": [
+        "query",
+        "limit"
+      ],
+      "prompts": [
+        "What is the ticker for NVIDIA?",
+        "Is BRK.B covered?",
+        "Find semiconductor names."
+      ]
+    },
+    {
+      "name": "calculate_expected_move",
+      "family": "earnings-expected-move-api",
+      "endpoints": [
+        "expected-move",
+        "expected-move-batch"
+      ],
+      "one_liner": "Straddle-implied expected move.",
+      "arguments": [
+        "ticker",
+        "expiration",
+        "tickers"
+      ],
+      "prompts": [
+        "What is the expected move for NVDA by Friday?",
+        "How much is priced into AAPL for October?",
+        "One-week expected move on SPY in dollars."
+      ]
+    },
+    {
+      "name": "get_greeks_heatmap",
+      "family": "options-greeks-api",
+      "endpoints": [
+        "greeks-heatmap"
+      ],
+      "one_liner": "Greeks as strike-by-expiration matrices.",
+      "arguments": [
+        "ticker",
+        "greek",
+        "option_type"
+      ],
+      "prompts": [
+        "Where is gamma concentrated on NVDA?",
+        "Show the vega heatmap for AAPL puts.",
+        "Which SPY strike has the most call OI?"
+      ]
+    },
+    {
+      "name": "get_charm_exposure",
+      "family": "options-greeks-api",
+      "endpoints": [
+        "charm"
+      ],
+      "one_liner": "Charm exposure by strike.",
+      "arguments": [
+        "ticker",
+        "expiration"
+      ],
+      "prompts": [
+        "How much delta decays out of SPY overnight?",
+        "Which QQQ strikes carry the most charm?",
+        "Charm on NVDA for the nearest expiration."
+      ]
+    },
+    {
+      "name": "get_third_order_greeks",
+      "family": "options-greeks-api",
+      "endpoints": [
+        "third-order-greeks"
+      ],
+      "one_liner": "Speed, zomma, color, vomma, ultima.",
+      "arguments": [
+        "ticker",
+        "expiration"
+      ],
+      "prompts": [
+        "Third-order Greeks for SPY at the money.",
+        "Where is vomma highest on NVDA?",
+        "How does gamma change with spot on QQQ?"
+      ]
+    },
+    {
+      "name": "calculate_portfolio_greeks",
+      "family": "risk-api",
+      "endpoints": [
+        "portfolio-greeks"
+      ],
+      "one_liner": "Aggregate Greeks for a book.",
+      "arguments": [
+        "positions"
+      ],
+      "prompts": [
+        "What are my portfolio Greeks?",
+        "Am I net long or short vega?",
+        "Roll up delta and theta across my positions."
+      ]
+    },
+    {
+      "name": "calculate_probability_of_profit",
+      "family": "strategies-api",
+      "endpoints": [
+        "pop"
+      ],
+      "one_liner": "Probability of profit for legs.",
+      "arguments": [
+        "legs",
+        "stock_price",
+        "days_to_exp"
+      ],
+      "prompts": [
+        "POP on this SPY iron condor?",
+        "How likely is my NVDA put spread to pay?",
+        "POP for a 16-delta AAPL strangle."
+      ]
+    },
+    {
+      "name": "get_gex",
+      "family": "gamma-exposure-api",
+      "endpoints": [
+        "gex",
+        "gex-batch"
+      ],
+      "one_liner": "Dealer gamma exposure, flip and walls.",
+      "arguments": [
+        "ticker",
+        "expiration",
+        "aggregate",
+        "tickers",
+        "strikes_around",
+        "detail"
+      ],
+      "prompts": [
+        "Where is the SPY gamma flip?",
+        "SPY call wall and put wall today?",
+        "Is QQQ in positive or negative gamma?"
+      ]
+    },
+    {
+      "name": "get_cross_index_gex",
+      "family": "gamma-exposure-api",
+      "endpoints": [
+        "cross-index-gex"
+      ],
+      "one_liner": "GEX across SPY, QQQ, IWM, DIA.",
+      "arguments": [
+        "tickers"
+      ],
+      "prompts": [
+        "Compare dealer gamma across the indices.",
+        "Which index is deepest in negative gamma?",
+        "Cross-index gamma summary for the open."
+      ]
+    },
+    {
+      "name": "get_zero_dte",
+      "family": "gamma-exposure-api",
+      "endpoints": [
+        "zero-dte"
+      ],
+      "one_liner": "0DTE expected move, walls, theta burn and edge.",
+      "arguments": [
+        "ticker",
+        "strikes_around",
+        "detail"
+      ],
+      "prompts": [
+        "Expected move for SPY today and the 0DTE walls?",
+        "Is SPY 0DTE gamma positive?",
+        "How often has SPY stayed inside its 0DTE move lately?"
+      ]
+    },
+    {
+      "name": "get_max_pain",
+      "family": "gamma-exposure-api",
+      "endpoints": [
+        "max-pain"
+      ],
+      "one_liner": "Max-pain strike and magnet strength.",
+      "arguments": [
+        "ticker",
+        "expiration"
+      ],
+      "prompts": [
+        "Max pain for SPY this Friday?",
+        "Is NVDA above or below max pain?",
+        "How strong is the max pain magnet on AAPL?"
+      ]
+    },
+    {
+      "name": "get_volume_profile",
+      "family": "gamma-exposure-api",
+      "endpoints": [
+        "volume-profile"
+      ],
+      "one_liner": "Volume and OI by strike.",
+      "arguments": [
+        "ticker",
+        "expiration"
+      ],
+      "prompts": [
+        "Which SPY strikes have the most volume?",
+        "Where is OI concentrated on NVDA for October?",
+        "AAPL put-call ratio by volume?"
+      ]
+    },
+    {
+      "name": "get_options_flow",
+      "family": "options-flow-api",
+      "endpoints": [
+        "flow"
+      ],
+      "one_liner": "Largest and unusual flow with sentiment.",
+      "arguments": [
+        "ticker",
+        "limit",
+        "detail"
+      ],
+      "prompts": [
+        "Options flow on NVDA today?",
+        "Unusual activity on AAPL?",
+        "Largest premium trades on SPY this session?"
+      ]
+    },
+    {
+      "name": "get_smart_money_flow",
+      "family": "options-flow-api",
+      "endpoints": [
+        "smart-money"
+      ],
+      "one_liner": "Institutional-looking trades, scored.",
+      "arguments": [
+        "ticker"
+      ],
+      "prompts": [
+        "Any institutional-looking trades on NVDA?",
+        "Smart-money flow on TSLA.",
+        "Large opening trades on AAPL today?"
+      ]
+    },
+    {
+      "name": "scan_volatility_arb",
+      "family": "screeners-api",
+      "endpoints": [
+        "vol-arb-scan"
+      ],
+      "one_liner": "Butterfly, skew, calendar and parity checks.",
+      "arguments": [],
+      "prompts": [
+        "Scan SPY for vol arb.",
+        "Mispriced butterflies on NVDA?",
+        "Skew trades on QQQ."
+      ]
+    },
+    {
+      "name": "screen_market",
+      "family": "screeners-api",
+      "endpoints": [
+        "screen"
+      ],
+      "one_liner": "Preset screens over the universe.",
+      "arguments": [
+        "screen_type",
+        "limit",
+        "min_market_cap",
+        "exclude_earnings_days"
+      ],
+      "prompts": [
+        "Screen for high IV rank over 5 billion cap.",
+        "Richest premium over realized this week?",
+        "List the available screens."
+      ]
+    },
+    {
+      "name": "get_market_overview",
+      "family": "screeners-api",
+      "endpoints": [
+        "market-overview"
+      ],
+      "one_liner": "Market-wide vol regime and heatmaps.",
+      "arguments": [],
+      "prompts": [
+        "Market volatility overview for this morning.",
+        "Which sectors have the highest IV?",
+        "Is the market in a high-vol regime?"
+      ]
+    },
+    {
+      "name": "scan_relative_value",
+      "family": "screeners-api",
+      "endpoints": [
+        "relative-value-scan"
+      ],
+      "one_liner": "IV-to-SPY stretches or rich-cheap pairs.",
+      "arguments": [
+        "view",
+        "limit",
+        "threshold"
+      ],
+      "prompts": [
+        "Which stocks have IV stretched versus SPY?",
+        "Find rich-versus-cheap vol pairs.",
+        "Stretches above 2 sigma?"
+      ]
+    },
+    {
+      "name": "get_earnings_calendar",
+      "family": "events-calendar-api",
+      "endpoints": [
+        "earnings-calendar"
+      ],
+      "one_liner": "Upcoming reports with implied versus average move.",
+      "arguments": [
+        "days_ahead",
+        "min_market_cap"
+      ],
+      "prompts": [
+        "Who reports this week with the biggest implied move?",
+        "Next week's large-cap earnings.",
+        "Reports in 3 days with move ratio above 1.2?"
+      ]
+    },
+    {
+      "name": "get_economic_calendar",
+      "family": "events-calendar-api",
+      "endpoints": [
+        "economic-calendar"
+      ],
+      "one_liner": "Macro events with impact and estimates.",
+      "arguments": [
+        "from_date",
+        "to_date"
+      ],
+      "prompts": [
+        "When is the next FOMC and CPI?",
+        "High-impact macro events this week?",
+        "Jobs report before Friday's SPY expiration?"
+      ]
+    },
+    {
+      "name": "analyze_earnings_history",
+      "family": "earnings-expected-move-api",
+      "endpoints": [
+        "earnings-history"
+      ],
+      "one_liner": "Per-report moves, surprises and IV crush.",
+      "arguments": [
+        "ticker"
+      ],
+      "prompts": [
+        "How much has NVDA moved on its last 8 earnings?",
+        "AAPL's average earnings gap?",
+        "TSLA earnings surprises and moves."
+      ]
+    },
+    {
+      "name": "get_earnings_move_analysis",
+      "family": "earnings-expected-move-api",
+      "endpoints": [
+        "mispricing-assessment",
+        "historical-moves",
+        "expected-vs-actual",
+        "earnings-verdict",
+        "seasonality",
+        "post-earnings-drift",
+        "iv-crush"
+      ],
+      "one_liner": "Seven earnings analyses picked by the analysis argument.",
+      "arguments": [
+        "ticker",
+        "analysis",
+        "periods"
+      ],
+      "prompts": [
+        "Should I buy or sell the NVDA earnings straddle?",
+        "How much IV crush should I expect on AAPL?",
+        "Does TSLA drift after an earnings gap?"
+      ]
+    },
+    {
+      "name": "get_ticker_analytics",
+      "family": "stock-analytics-api",
+      "endpoints": [
+        "skew",
+        "dividend",
+        "borrow-rate",
+        "correlation",
+        "correlation-compare",
+        "hv-regimes",
+        "price-context",
+        "relative-value",
+        "greeks-exposure"
+      ],
+      "one_liner": "Eight per-ticker analytics picked by the analysis argument.",
+      "arguments": [
+        "ticker",
+        "analysis",
+        "expiration",
+        "days",
+        "view",
+        "compare_with"
+      ],
+      "prompts": [
+        "Is NVDA's put skew steep?",
+        "Is GME hard to borrow?",
+        "Give me price context on AAPL."
+      ]
+    },
+    {
+      "name": "get_orats_cores",
+      "family": "stock-analytics-api",
+      "endpoints": [
+        "cores"
+      ],
+      "one_liner": "The raw analytics row for a ticker.",
+      "arguments": [
+        "ticker",
+        "fields"
+      ],
+      "prompts": [
+        "Pull the cores row for NVDA.",
+        "iv30d, clsHv20d and slope for AAPL.",
+        "exErnIv30d versus iv30d on TSLA?"
+      ]
+    },
+    {
+      "name": "build_strategy",
+      "family": "strategies-api",
+      "endpoints": [
+        "build-strategy"
+      ],
+      "one_liner": "Build a strategy from the live chain.",
+      "arguments": [
+        "ticker",
+        "strategy_type",
+        "expiration",
+        "width",
+        "target_delta"
+      ],
+      "prompts": [
+        "Build a 30-delta iron condor on SPY.",
+        "Credit put spread on NVDA 5 wide.",
+        "Strangle on AAPL for October."
+      ]
+    },
+    {
+      "name": "analyze_strategy",
+      "family": "strategies-api",
+      "endpoints": [
+        "analyze-strategy"
+      ],
+      "one_liner": "Analyze custom legs.",
+      "arguments": [
+        "ticker",
+        "legs"
+      ],
+      "prompts": [
+        "Analyze this SPY iron condor.",
+        "Breakevens on a NVDA 200/210 call spread?",
+        "Greeks and POP on my legs."
+      ]
+    },
+    {
+      "name": "optimize_strategy",
+      "family": "strategies-api",
+      "endpoints": [
+        "optimize-strategy"
+      ],
+      "one_liner": "Find the best strikes for a structure.",
+      "arguments": [
+        "ticker",
+        "strategy_type",
+        "target"
+      ],
+      "prompts": [
+        "Best-probability iron condor on SPY.",
+        "Optimize a NVDA credit spread for risk-reward.",
+        "Strikes that maximize credit on a QQQ condor."
+      ]
+    },
+    {
+      "name": "run_scenario_analysis",
+      "family": "risk-api",
+      "endpoints": [
+        "scenario-analysis"
+      ],
+      "one_liner": "P&L under your scenarios.",
+      "arguments": [
+        "positions",
+        "stock_move_pct",
+        "iv_change_pct",
+        "days_forward"
+      ],
+      "prompts": [
+        "SPY down 5% and IV up 20% in 5 days: my P&L?",
+        "Run +3% / -10 vol on my NVDA book.",
+        "Three scenarios on these positions."
+      ]
+    },
+    {
+      "name": "generate_stress_tests",
+      "family": "risk-api",
+      "endpoints": [
+        "stress-tests"
+      ],
+      "one_liner": "The standard stress battery.",
+      "arguments": [
+        "positions"
+      ],
+      "prompts": [
+        "Stress test my positions.",
+        "Loss in a 10% crash with a vol spike?",
+        "Run the stress battery on this book."
+      ]
+    },
+    {
+      "name": "get_hedge_recommendations",
+      "family": "risk-api",
+      "endpoints": [
+        "hedge-recommendations"
+      ],
+      "one_liner": "Share and option hedges to a target delta.",
+      "arguments": [
+        "positions",
+        "hedge_ticker",
+        "target_delta"
+      ],
+      "prompts": [
+        "Delta-hedge my book with SPY puts.",
+        "How many SPY shares neutralise these positions?",
+        "Get me flat delta with QQQ options."
+      ]
+    }
+  ],
+  "conventions": [
+    {
+      "topic": "Implied volatility",
+      "text": "Annualised, in percentage points on every summary endpoint (34.43 means 34.43%). Chain rows and the options-by-delta iv field are decimals (0.3443); options-by-delta also returns iv_pct. Every payload that carries IV says which with iv_units."
+    },
+    {
+      "topic": "Realized volatility",
+      "text": "Annualised percentage points, close-to-close log returns over the stated window (hv_basis, hv_window). Ex-earnings variants drop the earnings reaction sessions."
+    },
+    {
+      "topic": "Volatility risk premium",
+      "text": "IV minus realized, in points, both annualised. A negative premium means the stock has been moving more than options price. vrp_ratio is IV divided by realized."
+    },
+    {
+      "topic": "IV basis",
+      "text": "Rank and percentile endpoints measure on the daily IV series named in iv_basis. The VRP family, mispricing and price-context use the 30-day constant-maturity IV (iv30d). The two differ slightly on the same day; both are returned where it matters."
+    },
+    {
+      "topic": "Spot price",
+      "text": "stock_price on chain and Greeks endpoints is the forward-implied price from the nearest expiration, not an exchange last. For an index ETF the difference is cents; for a cash index the forward for a 30-day expiration sits above spot."
+    },
+    {
+      "topic": "Quotes",
+      "text": "Chain bid and ask are parity-implied from the data feed, not exchange NBBO. Mid is the average of the two."
+    },
+    {
+      "topic": "Greeks",
+      "text": "Per share for one contract on chain and heatmap endpoints. Dealer exposure endpoints (gex, greeks-exposure, charm) multiply by open interest under the dealer convention: dealers long customer-sold calls, short customer-bought puts. Gamma exposure is dollars per 1% move; total_gex_billions is the same in billions."
+    },
+    {
+      "topic": "Price changes",
+      "text": "Return and change fields are percent (5.05 means +5.05%). Vendor-named fields such as stkPxChng1m are already percentage points; do not multiply by 100."
+    },
+    {
+      "topic": "Moves",
+      "text": "Expected moves come from the ATM straddle and are given in dollars and percent. Earnings moves are close-to-open gaps on the reaction day. implied_move on the earnings calendar is the expected absolute move (the one-sigma figure times 0.8) so it shares the historical average's basis."
+    },
+    {
+      "topic": "Dates and times",
+      "text": "Dates are YYYY-MM-DD. timestamp and as_of are ISO 8601 in UTC. Economic-calendar event times are US Eastern."
+    },
+    {
+      "topic": "Market hours and freshness",
+      "text": "Chain and flow data update intraday during US market hours and hold the last session otherwise; is_market_hours and data_freshness say so where relevant. Bulk fields (screens, cores, price-context) are end-of-day and refresh each morning."
+    },
+    {
+      "topic": "Delayed tier",
+      "text": "Basic and Premium tokens see the same data as the web app at their tier; where a payload carries a quoteDate or trade_date, that is the session the numbers belong to."
+    },
+    {
+      "topic": "Expirations",
+      "text": "Surface endpoints may return the most recent expired date with a negative dte; filter on dte greater than 0."
+    },
+    {
+      "topic": "Response envelope",
+      "text": "Every 200 returns {\"success\": true, \"data\": {...}}. Errors return {\"success\": false, \"error\": \"message\"} with the status code in the HTTP status."
+    }
+  ],
+  "errors": [
+    {
+      "status": 400,
+      "name": "Bad request",
+      "text": "A parameter is out of bounds or malformed. Numeric query parameters are clamped to their documented range; a missing required field or an unparseable body returns 400 with the reason."
+    },
+    {
+      "status": 401,
+      "name": "Unauthorized",
+      "text": "No token, a revoked token, or a token for a subscription that is no longer valid. Create or rotate tokens under Account, then API Access."
+    },
+    {
+      "status": 403,
+      "name": "Plan required",
+      "text": "The endpoint needs a higher plan than the token's subscription. The body carries upgrade_required: true, required_tier and your_tier; each endpoint page states its tier. The same 403 without upgrade_required means the account has no active paid or trial subscription."
+    },
+    {
+      "status": 404,
+      "name": "Not found",
+      "text": "The path does not exist. The JSON body carries did_you_mean with the nearest documented paths and their docs URLs, plus the index URL."
+    },
+    {
+      "status": 424,
+      "name": "Upstream unavailable",
+      "text": "The data feed did not answer for this ticker or window. Retry after a few seconds; the platform never returns a 502 for this case because the edge would strip the body."
+    },
+    {
+      "status": 429,
+      "name": "Rate limited",
+      "text": "Per-token limits of 60 requests a minute, 1,000 an hour and a monthly allowance by plan. Retry-After carries the seconds until the window opens; the X-RateLimit-* headers show the remaining budget on every response."
+    },
+    {
+      "status": 503,
+      "name": "Service unavailable",
+      "text": "Only the flow endpoint uses this, when the intraday volume feed is down. Retry later."
+    }
+  ],
+  "references": {
+    "index_endpoint": "GET https://apexvol.com/api/mcp/data/ (token required)",
+    "openapi": "https://apexvol.com/docs/api/openapi.json",
+    "markdown_reference": "https://apexvol.com/docs/api/apexvol-api.md",
+    "docs_hub": "https://apexvol.com/docs/api",
+    "prompt_library": "https://apexvol.com/mcp/prompts",
+    "account_tokens": "https://apexvol.com/account"
+  }
+}

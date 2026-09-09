@@ -7,6 +7,7 @@ Uses REST API calls to ApexVol platform.
 
 import logging
 from datetime import datetime, timezone
+from typing import Optional
 
 from mcp.server.fastmcp import FastMCP
 
@@ -20,7 +21,11 @@ def register_tools(mcp: FastMCP):
     """Register flow tools with the MCP server."""
 
     @mcp.tool(**read_only('Options Flow'))
-    async def get_options_flow(ticker: str) -> dict:
+    async def get_options_flow(
+        ticker: str,
+        limit: Optional[int] = None,
+        detail: Optional[str] = None
+    ) -> dict:
         """
         Analyze options flow and unusual activity for a ticker.
 
@@ -35,13 +40,21 @@ def register_tools(mcp: FastMCP):
 
         Args:
             ticker: Stock symbol
+            limit: Rows kept in the flow lists under compact detail (server
+                default 25; 1 to 500).
+            detail: "compact" (default) or "full" for every row.
 
         Returns:
             Flow analysis with volumes, premiums, and unusual activity
         """
         try:
             client = get_client()
-            result = await client.get(f"/flow/{ticker.upper()}")
+            params = {}
+            if limit is not None:
+                params['limit'] = int(limit)
+            if detail in ('compact', 'full'):
+                params['detail'] = detail
+            result = await client.get(f"/flow/{ticker.upper()}", params=params or None)
 
             # The server nests the totals under 'summary' (total_call_volume,
             # total_put_volume, total_call_premium, total_put_premium,

@@ -13,6 +13,7 @@ from mcp.server.fastmcp import FastMCP
 
 from ..api_client import get_client, ApexVolAPIError
 from ._annotations import read_only
+from ._format import csv_symbols, money
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +25,10 @@ def register_tools(mcp: FastMCP):
     async def get_gex(
         ticker: str,
         expiration: Optional[str] = None,
-        aggregate: bool = True
+        aggregate: bool = True,
+        tickers: Optional[str] = None,
+        strikes_around: Optional[int] = None,
+        detail: Optional[str] = None
     ) -> dict:
         """
         Get Gamma Exposure (GEX) levels and flip points.
@@ -43,6 +47,12 @@ def register_tools(mcp: FastMCP):
             ticker: Stock symbol (e.g., "SPY", "QQQ")
             expiration: Specific expiration or None for aggregate
             aggregate: Whether to aggregate across all expirations
+            tickers: Comma-separated list of up to 25 symbols ("SPY,QQQ,IWM")
+                for one batch call; `ticker` is ignored and the result is a
+                levels table per symbol for one rate-limit unit.
+            strikes_around: Strikes kept each side of spot in the profile
+                lists (server default 25, or 10 in a batch); 0 keeps every strike.
+            detail: "compact" (default) or "full" for every strike.
 
         Returns:
             GEX by strike, total GEX, and key levels
@@ -52,6 +62,31 @@ def register_tools(mcp: FastMCP):
             params = {'aggregate': str(aggregate).lower()}
             if expiration:
                 params['expiration'] = expiration
+            if strikes_around is not None:
+                params['strikes_around'] = int(strikes_around)
+            if detail in ('compact', 'full'):
+                params['detail'] = detail
+            if tickers:
+                params['tickers'] = csv_symbols(tickers)
+                result = await client.get("/batch/gex", params=params)
+                rows = ["| Ticker | Spot | Total GEX | Flip | Call wall | Put wall |",
+                        "|---|---|---|---|---|---|"]
+                for sym, d in (result.get('results') or {}).items():
+                    lv = d.get('key_levels') or {}
+                    flip = d.get('flip_level') if d.get('flip_level') is not None else d.get('gamma_flip')
+                    tg = d.get('total_gex') or 0
+                    rows.append(f"| {sym} | {money(d.get('stock_price'))} | {tg:,.0f} | {money(flip)} "
+                                f"| {money(lv.get('call_wall'))} | {money(lv.get('put_wall'))} |")
+                for sym, err in (result.get('errors') or {}).items():
+                    rows.append(f"| {sym} | n/a | n/a | n/a | n/a | {err} |")
+                return {
+                    "success": True,
+                    "data": result,
+                    "summary": (f"## Gamma exposure, {result.get('succeeded', 0)} of "
+                                f"{result.get('requested', 0)} symbols\n\n" + "\n".join(rows)),
+                    "metadata": {"timestamp": datetime.now(timezone.utc).isoformat(),
+                                 "aggregated": aggregate, "batch": True},
+                }
 
             result = await client.get(f"/gex/{ticker.upper()}", params=params)
 

@@ -39,6 +39,14 @@ risk.register_tools(mcp)
 events.register_tools(mcp)
 analytics.register_tools(mcp)
 
+# Docs inside the server: the `help` tool (vendored _records.json) and the
+# prompt starters for the client's prompt picker (vendored _prompts.json).
+from . import help as help_tool
+from .prompts import register_prompts
+
+help_tool.register_tools(mcp)
+register_prompts(mcp)
+
 
 def run_check() -> int:
     """Verify install + token against the live API (apexvol-mcp --check).

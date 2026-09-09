@@ -13,6 +13,7 @@ from mcp.server.fastmcp import FastMCP
 
 from ..api_client import get_client, ApexVolAPIError
 from ._annotations import read_only
+from ._format import csv_symbols, num
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,8 @@ def register_tools(mcp: FastMCP):
     @mcp.tool(**read_only('IV Rank'))
     async def get_iv_rank(
         ticker: str,
-        lookback_days: int = 252
+        lookback_days: int = 252,
+        tickers: Optional[str] = None
     ) -> dict:
         """
         Get IV Rank and percentile for a stock.
@@ -42,6 +44,9 @@ def register_tools(mcp: FastMCP):
         Args:
             ticker: Stock symbol (e.g., "AAPL", "SPY")
             lookback_days: Historical lookback period (default 252 = 1 year)
+            tickers: Comma-separated list of up to 25 symbols ("SPY,QQQ,IWM")
+                for one batch call. When given, `ticker` is ignored and the
+                result is a table of every symbol for one rate-limit unit.
 
         Returns:
             IV rank data with interpretation and strategy recommendations
@@ -49,6 +54,22 @@ def register_tools(mcp: FastMCP):
         try:
             client = get_client()
             params = {'lookback_days': lookback_days}
+            if tickers:
+                params['tickers'] = csv_symbols(tickers)
+                result = await client.get("/batch/iv-rank", params=params)
+                rows = ["| Ticker | IV rank | IV percentile | Current IV |", "|---|---|---|---|"]
+                for sym, d in (result.get('results') or {}).items():
+                    rows.append(f"| {sym} | {num(d.get('iv_rank'))} | {num(d.get('iv_percentile'))} "
+                                f"| {num(d.get('current_iv'))}% |")
+                for sym, err in (result.get('errors') or {}).items():
+                    rows.append(f"| {sym} | n/a | n/a | {err} |")
+                return {
+                    "success": True,
+                    "data": result,
+                    "summary": (f"## IV rank, {result.get('succeeded', 0)} of "
+                                f"{result.get('requested', 0)} symbols\n\n" + "\n".join(rows)),
+                    "metadata": {"timestamp": datetime.now(timezone.utc).isoformat(), "batch": True},
+                }
             result = await client.get(f"/iv-rank/{ticker.upper()}", params=params)
 
             # Determine assessment

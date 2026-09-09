@@ -124,7 +124,7 @@ def test_all_tools_registered_with_descriptions():
     match what the README advertises."""
     from apexvol_mcp.server import mcp
     tools = asyncio.run(mcp.list_tools())
-    assert len(tools) == 43
+    assert len(tools) == 44
     for t in tools:
         assert t.description and len(t.description.strip()) > 40, f"{t.name} lacks a docstring"
 

@@ -13,6 +13,7 @@ from mcp.server.fastmcp import FastMCP
 
 from ..api_client import get_client, ApexVolAPIError
 from ._annotations import read_only
+from ._format import csv_symbols, money, num
 
 logger = logging.getLogger(__name__)
 
@@ -227,7 +228,8 @@ def register_tools(mcp: FastMCP):
     @mcp.tool(**read_only('Expected Move'))
     async def calculate_expected_move(
         ticker: str,
-        expiration: Optional[str] = None
+        expiration: Optional[str] = None,
+        tickers: Optional[str] = None
     ) -> dict:
         """
         Calculate the expected move based on ATM straddle pricing.
@@ -244,6 +246,10 @@ def register_tools(mcp: FastMCP):
         Args:
             ticker: Stock symbol
             expiration: Specific expiration or None for nearest
+            tickers: Comma-separated list of up to 25 symbols ("SPY,AAPL,NVDA")
+                for one batch call; `ticker` is ignored and every symbol's move
+                comes back in one table. Pass `expiration` too so the moves
+                share a horizon.
 
         Returns:
             Expected move in dollars and percentage
@@ -253,6 +259,25 @@ def register_tools(mcp: FastMCP):
             params = {}
             if expiration:
                 params['expiration'] = expiration
+            if tickers:
+                params['tickers'] = csv_symbols(tickers)
+                result = await client.get("/batch/expected-move", params=params)
+                rows = ["| Ticker | Expiration | DTE | Spot | Move | Move % | Range |",
+                        "|---|---|---|---|---|---|---|"]
+                for sym, d in (result.get('results') or {}).items():
+                    rows.append(f"| {sym} | {d.get('expiration', 'n/a')} | {d.get('dte', 'n/a')} "
+                                f"| {money(d.get('stock_price'))} | {money(d.get('expected_move_dollars'))} "
+                                f"| {num(d.get('expected_move_percent'), 2)}% "
+                                f"| {money(d.get('lower_bound'))} to {money(d.get('upper_bound'))} |")
+                for sym, err in (result.get('errors') or {}).items():
+                    rows.append(f"| {sym} | n/a | n/a | n/a | n/a | n/a | {err} |")
+                return {
+                    "success": True,
+                    "data": result,
+                    "summary": (f"## Expected move, {result.get('succeeded', 0)} of "
+                                f"{result.get('requested', 0)} symbols\n\n" + "\n".join(rows)),
+                    "metadata": {"timestamp": datetime.now(timezone.utc).isoformat(), "batch": True},
+                }
 
             result = await client.get(f"/expected-move/{ticker.upper()}", params=params if params else None)
 

@@ -1,0 +1,905 @@
+{
+  "records_updated": "2026-09-08",
+  "pages_updated": "2026-09-08",
+  "prompts": [
+    {
+      "name": "vol-iv-rank-and-term-structure",
+      "title": "IV Rank and IV Term Structure",
+      "description": "What is NVDA's IV rank right now, and how does its term structure look? Rank and percentile with the 52-week range, then ATM IV by expiration so contango or inversion is visible.",
+      "returns": "Rank and percentile with the 52-week range, then ATM IV by expiration so contango or inversion is visible.",
+      "family": "implied-volatility-api",
+      "family_name": "Implied volatility",
+      "docs_url": "https://apexvol.com/developers/implied-volatility-api",
+      "tools": [
+        {
+          "name": "get_iv_rank",
+          "mode": null
+        },
+        {
+          "name": "get_term_structure",
+          "mode": null
+        }
+      ],
+      "template": "What is {ticker}'s IV rank right now, and how does its term structure look?",
+      "arguments": [
+        {
+          "name": "ticker",
+          "default": "NVDA"
+        }
+      ]
+    },
+    {
+      "name": "vol-volatility-risk-premium",
+      "title": "Volatility Risk Premium",
+      "description": "Is SPY's implied volatility rich or cheap against what it has been realizing? The 30-day implied minus realized in points, with the lookback and the basis labelled.",
+      "returns": "The 30-day implied minus realized in points, with the lookback and the basis labelled.",
+      "family": "implied-volatility-api",
+      "family_name": "Implied volatility",
+      "docs_url": "https://apexvol.com/developers/implied-volatility-api",
+      "tools": [
+        {
+          "name": "get_volatility_risk_premium",
+          "mode": null
+        }
+      ],
+      "template": "Is {ticker}'s implied volatility rich or cheap against what it has been realizing?",
+      "arguments": [
+        {
+          "name": "ticker",
+          "default": "SPY"
+        }
+      ]
+    },
+    {
+      "name": "vol-volatility-cone",
+      "title": "Volatility Cone",
+      "description": "Show me AAPL's vol cone and tell me where the 30-day IV sits in it. Realized-vol percentiles per tenor against the chain-interpolated implied at the same tenor.",
+      "returns": "Realized-vol percentiles per tenor against the chain-interpolated implied at the same tenor.",
+      "family": "implied-volatility-api",
+      "family_name": "Implied volatility",
+      "docs_url": "https://apexvol.com/developers/implied-volatility-api",
+      "tools": [
+        {
+          "name": "get_volatility_cone",
+          "mode": null
+        }
+      ],
+      "template": "Show me {ticker}'s vol cone and tell me where the 30-day IV sits in it.",
+      "arguments": [
+        {
+          "name": "ticker",
+          "default": "AAPL"
+        }
+      ]
+    },
+    {
+      "name": "chain-options-by-delta",
+      "title": "Options by Delta",
+      "description": "Find the 16-delta put on AMD for the next monthly expiry and give me its Greeks. The nearest listed strike, its actual delta, IV and the live quote.",
+      "returns": "The nearest listed strike, its actual delta, IV and the live quote.",
+      "family": "options-chain-api",
+      "family_name": "Options chain",
+      "docs_url": "https://apexvol.com/developers/options-chain-api",
+      "tools": [
+        {
+          "name": "get_options_by_delta",
+          "mode": null
+        }
+      ],
+      "template": "Find the 16-delta put on {ticker} for the next monthly expiry and give me its Greeks.",
+      "arguments": [
+        {
+          "name": "ticker",
+          "default": "AMD"
+        }
+      ]
+    },
+    {
+      "name": "chain-options-chain",
+      "title": "Options Chain",
+      "description": "Show me MSFT's chain for the nearest expiry, ten strikes either side of the money. One row per strike with call and put quotes, IV, Greeks, volume and open interest.",
+      "returns": "One row per strike with call and put quotes, IV, Greeks, volume and open interest.",
+      "family": "options-chain-api",
+      "family_name": "Options chain",
+      "docs_url": "https://apexvol.com/developers/options-chain-api",
+      "tools": [
+        {
+          "name": "get_options_chain",
+          "mode": null
+        }
+      ],
+      "template": "Show me {ticker}'s chain for the nearest expiry, ten strikes either side of the money.",
+      "arguments": [
+        {
+          "name": "ticker",
+          "default": "MSFT"
+        }
+      ]
+    },
+    {
+      "name": "chain-historical-chain",
+      "title": "Historical Options Chain",
+      "description": "How was the SPY chain priced on the Friday before the last FOMC? The end-of-day chain for that date with real bid and ask.",
+      "returns": "The end-of-day chain for that date with real bid and ask.",
+      "family": "options-chain-api",
+      "family_name": "Options chain",
+      "docs_url": "https://apexvol.com/developers/options-chain-api",
+      "tools": [
+        {
+          "name": "get_historical_chain",
+          "mode": null
+        }
+      ],
+      "template": "How was the {ticker} chain priced on the Friday before the last FOMC?",
+      "arguments": [
+        {
+          "name": "ticker",
+          "default": "SPY"
+        }
+      ]
+    },
+    {
+      "name": "greeks-greeks-heatmap",
+      "title": "Greeks Heatmap",
+      "description": "Where is gamma concentrated on NVDA? Greeks as strike-by-expiration matrices.",
+      "returns": "Greeks as strike-by-expiration matrices.",
+      "family": "options-greeks-api",
+      "family_name": "Options Greeks",
+      "docs_url": "https://apexvol.com/developers/options-greeks-api",
+      "tools": [
+        {
+          "name": "get_greeks_heatmap",
+          "mode": null
+        }
+      ],
+      "template": "Where is gamma concentrated on {ticker}?",
+      "arguments": [
+        {
+          "name": "ticker",
+          "default": "NVDA"
+        }
+      ]
+    },
+    {
+      "name": "greeks-charm-exposure",
+      "title": "Charm Exposure",
+      "description": "How much delta decays out of SPY overnight? Charm exposure by strike.",
+      "returns": "Charm exposure by strike.",
+      "family": "options-greeks-api",
+      "family_name": "Options Greeks",
+      "docs_url": "https://apexvol.com/developers/options-greeks-api",
+      "tools": [
+        {
+          "name": "get_charm_exposure",
+          "mode": null
+        }
+      ],
+      "template": "How much delta decays out of {ticker} overnight?",
+      "arguments": [
+        {
+          "name": "ticker",
+          "default": "SPY"
+        }
+      ]
+    },
+    {
+      "name": "greeks-third-order-greeks",
+      "title": "Third-Order Greeks",
+      "description": "Third-order Greeks for SPY at the money. Speed, zomma, color, vomma, ultima.",
+      "returns": "Speed, zomma, color, vomma, ultima.",
+      "family": "options-greeks-api",
+      "family_name": "Options Greeks",
+      "docs_url": "https://apexvol.com/developers/options-greeks-api",
+      "tools": [
+        {
+          "name": "get_third_order_greeks",
+          "mode": null
+        }
+      ],
+      "template": "Third-order Greeks for {ticker} at the money.",
+      "arguments": [
+        {
+          "name": "ticker",
+          "default": "SPY"
+        }
+      ]
+    },
+    {
+      "name": "gex",
+      "title": "Gamma Exposure (GEX)",
+      "description": "Where is SPY's gamma flip today, and which strikes hold the most dealer gamma? Net, call and put GEX, the flip level and the key strikes.",
+      "returns": "Net, call and put GEX, the flip level and the key strikes.",
+      "family": "gamma-exposure-api",
+      "family_name": "Gamma exposure",
+      "docs_url": "https://apexvol.com/developers/gamma-exposure-api",
+      "tools": [
+        {
+          "name": "get_gex",
+          "mode": null
+        }
+      ],
+      "template": "Where is {ticker}'s gamma flip today, and which strikes hold the most dealer gamma?",
+      "arguments": [
+        {
+          "name": "ticker",
+          "default": "SPY"
+        }
+      ]
+    },
+    {
+      "name": "gex-cross-index-gex",
+      "title": "Cross-Index GEX",
+      "description": "Compare dealer gamma across SPY, QQQ and IWM this morning. One summary per index so the regime is read side by side.",
+      "returns": "One summary per index so the regime is read side by side.",
+      "family": "gamma-exposure-api",
+      "family_name": "Gamma exposure",
+      "docs_url": "https://apexvol.com/developers/gamma-exposure-api",
+      "tools": [
+        {
+          "name": "get_cross_index_gex",
+          "mode": null
+        }
+      ],
+      "template": "Compare dealer gamma across {ticker}, {ticker_b} and IWM this morning.",
+      "arguments": [
+        {
+          "name": "ticker",
+          "default": "SPY"
+        },
+        {
+          "name": "ticker_b",
+          "default": "QQQ"
+        }
+      ]
+    },
+    {
+      "name": "gex-max-pain-and-zero-dte",
+      "title": "Max Pain and 0DTE Analytics",
+      "description": "What is max pain on SPX for this Friday, and what does the 0DTE gamma look like? The max-pain strike and, for today's expiry, by-strike gamma and the flip.",
+      "returns": "The max-pain strike and, for today's expiry, by-strike gamma and the flip.",
+      "family": "gamma-exposure-api",
+      "family_name": "Gamma exposure",
+      "docs_url": "https://apexvol.com/developers/gamma-exposure-api",
+      "tools": [
+        {
+          "name": "get_max_pain",
+          "mode": null
+        },
+        {
+          "name": "get_zero_dte",
+          "mode": null
+        }
+      ],
+      "template": "What is max pain on {ticker} for this Friday, and what does the 0DTE gamma look like?",
+      "arguments": [
+        {
+          "name": "ticker",
+          "default": "SPX"
+        }
+      ]
+    },
+    {
+      "name": "flow-options-flow",
+      "title": "Options Flow",
+      "description": "What is the largest options flow in NVDA today, and does it read bullish or bearish? The contracts carrying the most premium, the unusual ones by volume against open interest, and the sentiment totals.",
+      "returns": "The contracts carrying the most premium, the unusual ones by volume against open interest, and the sentiment totals.",
+      "family": "options-flow-api",
+      "family_name": "Options flow",
+      "docs_url": "https://apexvol.com/developers/options-flow-api",
+      "tools": [
+        {
+          "name": "get_options_flow",
+          "mode": null
+        }
+      ],
+      "template": "What is the largest options flow in {ticker} today, and does it read bullish or bearish?",
+      "arguments": [
+        {
+          "name": "ticker",
+          "default": "NVDA"
+        }
+      ]
+    },
+    {
+      "name": "flow-market-unusual-volume",
+      "title": "Market Screener (unusual volume)",
+      "description": "Which stocks have the most unusual options volume today? The coverage universe ranked by the preset in one call.",
+      "returns": "The coverage universe ranked by the preset in one call.",
+      "family": "options-flow-api",
+      "family_name": "Options flow",
+      "docs_url": "https://apexvol.com/developers/options-flow-api",
+      "tools": [
+        {
+          "name": "screen_market",
+          "mode": "unusual_volume"
+        }
+      ],
+      "template": "Which stocks have the most unusual options volume today?",
+      "arguments": []
+    },
+    {
+      "name": "flow-smart-money-flow",
+      "title": "Smart Money Flow",
+      "description": "Any institutional-looking trades on NVDA? Institutional-looking trades, scored.",
+      "returns": "Institutional-looking trades, scored.",
+      "family": "options-flow-api",
+      "family_name": "Options flow",
+      "docs_url": "https://apexvol.com/developers/options-flow-api",
+      "tools": [
+        {
+          "name": "get_smart_money_flow",
+          "mode": null
+        }
+      ],
+      "template": "Any institutional-looking trades on {ticker}?",
+      "arguments": [
+        {
+          "name": "ticker",
+          "default": "NVDA"
+        }
+      ]
+    },
+    {
+      "name": "earnings-earnings-move-analysis-verdict",
+      "title": "Earnings Move Analysis (verdict)",
+      "description": "Is NVDA's earnings straddle overpriced compared with how much the stock usually moves? The priced event move against the historical average gap, the straddle's hit rate and return, and a signal with reasons.",
+      "returns": "The priced event move against the historical average gap, the straddle's hit rate and return, and a signal with reasons.",
+      "family": "earnings-expected-move-api",
+      "family_name": "Earnings and expected move",
+      "docs_url": "https://apexvol.com/developers/earnings-expected-move-api",
+      "tools": [
+        {
+          "name": "get_earnings_move_analysis",
+          "mode": "verdict"
+        }
+      ],
+      "template": "Is {ticker}'s earnings straddle overpriced compared with how much the stock usually moves?",
+      "arguments": [
+        {
+          "name": "ticker",
+          "default": "NVDA"
+        }
+      ]
+    },
+    {
+      "name": "earnings-earnings-calendar",
+      "title": "Earnings Calendar",
+      "description": "Which companies report in the next seven days, and whose implied move is furthest above its average? The calendar with each name's implied versus historical move already on the row.",
+      "returns": "The calendar with each name's implied versus historical move already on the row.",
+      "family": "earnings-expected-move-api",
+      "family_name": "Earnings and expected move",
+      "docs_url": "https://apexvol.com/developers/earnings-expected-move-api",
+      "tools": [
+        {
+          "name": "get_earnings_calendar",
+          "mode": null
+        }
+      ],
+      "template": "Which companies report in the next seven days, and whose implied move is furthest above its average?",
+      "arguments": []
+    },
+    {
+      "name": "earnings-earnings-move-analysis-iv-crush",
+      "title": "Earnings Move Analysis (iv crush)",
+      "description": "How much does TSLA's IV usually fall after earnings? The average IV build into the report and the drop after, over past events.",
+      "returns": "The average IV build into the report and the drop after, over past events.",
+      "family": "earnings-expected-move-api",
+      "family_name": "Earnings and expected move",
+      "docs_url": "https://apexvol.com/developers/earnings-expected-move-api",
+      "tools": [
+        {
+          "name": "get_earnings_move_analysis",
+          "mode": "iv_crush"
+        }
+      ],
+      "template": "How much does {ticker}'s IV usually fall after earnings?",
+      "arguments": [
+        {
+          "name": "ticker",
+          "default": "TSLA"
+        }
+      ]
+    },
+    {
+      "name": "strategy",
+      "title": "Strategy Builder and Strategy Analyzer",
+      "description": "Build a 30-day iron condor on SPY at the 16 deltas and tell me the max loss and probability of profit. The legs with strikes, premiums and Greeks, then max profit, max loss, breakevens and probability of profit.",
+      "returns": "The legs with strikes, premiums and Greeks, then max profit, max loss, breakevens and probability of profit.",
+      "family": "strategies-api",
+      "family_name": "Strategies",
+      "docs_url": "https://apexvol.com/developers/strategies-api",
+      "tools": [
+        {
+          "name": "build_strategy",
+          "mode": null
+        },
+        {
+          "name": "analyze_strategy",
+          "mode": null
+        }
+      ],
+      "template": "Build a 30-day iron condor on {ticker} at the 16 deltas and tell me the max loss and probability of profit.",
+      "arguments": [
+        {
+          "name": "ticker",
+          "default": "SPY"
+        }
+      ]
+    },
+    {
+      "name": "strategy-portfolio-greeks-and-hedge-recommendations",
+      "title": "Portfolio Greeks and Hedge Recommendations",
+      "description": "I am long 500 AAPL and short 5 of the 200 calls into March. What are my net Greeks and how would I hedge the delta? Net delta, gamma, theta and vega with a risk label, and the stock hedge that flattens delta.",
+      "returns": "Net delta, gamma, theta and vega with a risk label, and the stock hedge that flattens delta.",
+      "family": "strategies-api",
+      "family_name": "Strategies",
+      "docs_url": "https://apexvol.com/developers/strategies-api",
+      "tools": [
+        {
+          "name": "calculate_portfolio_greeks",
+          "mode": null
+        },
+        {
+          "name": "get_hedge_recommendations",
+          "mode": null
+        }
+      ],
+      "template": "I am long 500 {ticker} and short 5 of the 200 calls into March. What are my net Greeks and how would I hedge the delta?",
+      "arguments": [
+        {
+          "name": "ticker",
+          "default": "AAPL"
+        }
+      ]
+    },
+    {
+      "name": "strategy-stress-tests",
+      "title": "Stress Tests",
+      "description": "Stress this book through a ten percent crash with a vol spike. Estimated P&L per scenario across the standard battery.",
+      "returns": "Estimated P&L per scenario across the standard battery.",
+      "family": "strategies-api",
+      "family_name": "Strategies",
+      "docs_url": "https://apexvol.com/developers/strategies-api",
+      "tools": [
+        {
+          "name": "generate_stress_tests",
+          "mode": null
+        }
+      ],
+      "template": "Stress this book through a ten percent crash with a vol spike.",
+      "arguments": []
+    },
+    {
+      "name": "risk-portfolio-greeks",
+      "title": "Portfolio Greeks",
+      "description": "What are my portfolio Greeks? Aggregate Greeks for a book.",
+      "returns": "Aggregate Greeks for a book.",
+      "family": "risk-api",
+      "family_name": "Portfolio risk",
+      "docs_url": "https://apexvol.com/developers/risk-api",
+      "tools": [
+        {
+          "name": "calculate_portfolio_greeks",
+          "mode": null
+        }
+      ],
+      "template": "What are my portfolio Greeks?",
+      "arguments": []
+    },
+    {
+      "name": "risk-scenario-analysis",
+      "title": "Scenario Analysis",
+      "description": "SPY down 5% and IV up 20% in 5 days: my P&L? P&L under your scenarios.",
+      "returns": "P&L under your scenarios.",
+      "family": "risk-api",
+      "family_name": "Portfolio risk",
+      "docs_url": "https://apexvol.com/developers/risk-api",
+      "tools": [
+        {
+          "name": "run_scenario_analysis",
+          "mode": null
+        }
+      ],
+      "template": "{ticker} down 5% and IV up 20% in 5 days: my P&L?",
+      "arguments": [
+        {
+          "name": "ticker",
+          "default": "SPY"
+        }
+      ]
+    },
+    {
+      "name": "risk-stress-tests",
+      "title": "Stress Tests",
+      "description": "Stress test my positions. The standard stress battery.",
+      "returns": "The standard stress battery.",
+      "family": "risk-api",
+      "family_name": "Portfolio risk",
+      "docs_url": "https://apexvol.com/developers/risk-api",
+      "tools": [
+        {
+          "name": "generate_stress_tests",
+          "mode": null
+        }
+      ],
+      "template": "Stress test my positions.",
+      "arguments": []
+    },
+    {
+      "name": "events-earnings-calendar",
+      "title": "Earnings Calendar",
+      "description": "Who reports this week with the biggest implied move? Upcoming reports with implied versus average move.",
+      "returns": "Upcoming reports with implied versus average move.",
+      "family": "events-calendar-api",
+      "family_name": "Events and calendars",
+      "docs_url": "https://apexvol.com/developers/events-calendar-api",
+      "tools": [
+        {
+          "name": "get_earnings_calendar",
+          "mode": null
+        }
+      ],
+      "template": "Who reports this week with the biggest implied move?",
+      "arguments": []
+    },
+    {
+      "name": "events-economic-calendar",
+      "title": "Economic Calendar",
+      "description": "When is the next FOMC and CPI? Macro events with impact and estimates.",
+      "returns": "Macro events with impact and estimates.",
+      "family": "events-calendar-api",
+      "family_name": "Events and calendars",
+      "docs_url": "https://apexvol.com/developers/events-calendar-api",
+      "tools": [
+        {
+          "name": "get_economic_calendar",
+          "mode": null
+        }
+      ],
+      "template": "When is the next FOMC and CPI?",
+      "arguments": []
+    },
+    {
+      "name": "events-earnings-calendar-2",
+      "title": "Earnings Calendar",
+      "description": "Next week's large-cap earnings. Upcoming reports with implied versus average move.",
+      "returns": "Upcoming reports with implied versus average move.",
+      "family": "events-calendar-api",
+      "family_name": "Events and calendars",
+      "docs_url": "https://apexvol.com/developers/events-calendar-api",
+      "tools": [
+        {
+          "name": "get_earnings_calendar",
+          "mode": null
+        }
+      ],
+      "template": "Next week's large-cap earnings.",
+      "arguments": []
+    },
+    {
+      "name": "screen-volatility-arb",
+      "title": "Volatility Arbitrage Scan",
+      "description": "Scan SPY for vol arb. Butterfly, skew, calendar and parity checks.",
+      "returns": "Butterfly, skew, calendar and parity checks.",
+      "family": "screeners-api",
+      "family_name": "Screeners",
+      "docs_url": "https://apexvol.com/developers/screeners-api",
+      "tools": [
+        {
+          "name": "scan_volatility_arb",
+          "mode": null
+        }
+      ],
+      "template": "Scan {ticker} for vol arb.",
+      "arguments": [
+        {
+          "name": "ticker",
+          "default": "SPY"
+        }
+      ]
+    },
+    {
+      "name": "screen-market",
+      "title": "Market Screener",
+      "description": "Screen for high IV rank over 5 billion cap. Preset screens over the universe.",
+      "returns": "Preset screens over the universe.",
+      "family": "screeners-api",
+      "family_name": "Screeners",
+      "docs_url": "https://apexvol.com/developers/screeners-api",
+      "tools": [
+        {
+          "name": "screen_market",
+          "mode": null
+        }
+      ],
+      "template": "Screen for high IV rank over 5 billion cap.",
+      "arguments": []
+    },
+    {
+      "name": "screen-market-overview",
+      "title": "Market Overview",
+      "description": "Market volatility overview for this morning. Market-wide vol regime and heatmaps.",
+      "returns": "Market-wide vol regime and heatmaps.",
+      "family": "screeners-api",
+      "family_name": "Screeners",
+      "docs_url": "https://apexvol.com/developers/screeners-api",
+      "tools": [
+        {
+          "name": "get_market_overview",
+          "mode": null
+        }
+      ],
+      "template": "Market volatility overview for this morning.",
+      "arguments": []
+    },
+    {
+      "name": "stock-ticker-analytics",
+      "title": "Ticker Analytics",
+      "description": "Is NVDA's put skew steep? Eight per-ticker analytics picked by the analysis argument.",
+      "returns": "Eight per-ticker analytics picked by the analysis argument.",
+      "family": "stock-analytics-api",
+      "family_name": "Stock analytics",
+      "docs_url": "https://apexvol.com/developers/stock-analytics-api",
+      "tools": [
+        {
+          "name": "get_ticker_analytics",
+          "mode": null
+        }
+      ],
+      "template": "Is {ticker}'s put skew steep?",
+      "arguments": [
+        {
+          "name": "ticker",
+          "default": "NVDA"
+        }
+      ]
+    },
+    {
+      "name": "stock-orats-cores",
+      "title": "ORATS Core Data",
+      "description": "Pull the cores row for NVDA. The raw analytics row for a ticker.",
+      "returns": "The raw analytics row for a ticker.",
+      "family": "stock-analytics-api",
+      "family_name": "Stock analytics",
+      "docs_url": "https://apexvol.com/developers/stock-analytics-api",
+      "tools": [
+        {
+          "name": "get_orats_cores",
+          "mode": null
+        }
+      ],
+      "template": "Pull the cores row for {ticker}.",
+      "arguments": [
+        {
+          "name": "ticker",
+          "default": "NVDA"
+        }
+      ]
+    },
+    {
+      "name": "stock-ticker-analytics-2",
+      "title": "Ticker Analytics",
+      "description": "Is GME hard to borrow? Eight per-ticker analytics picked by the analysis argument.",
+      "returns": "Eight per-ticker analytics picked by the analysis argument.",
+      "family": "stock-analytics-api",
+      "family_name": "Stock analytics",
+      "docs_url": "https://apexvol.com/developers/stock-analytics-api",
+      "tools": [
+        {
+          "name": "get_ticker_analytics",
+          "mode": null
+        }
+      ],
+      "template": "Is {ticker} hard to borrow?",
+      "arguments": [
+        {
+          "name": "ticker",
+          "default": "GME"
+        }
+      ]
+    },
+    {
+      "name": "recipe-morning-regime-brief",
+      "title": "Morning regime brief",
+      "description": "Give me a morning regime brief: dealer gamma flip, call wall and put wall for SPY, QQQ and IWM, plus where the VIX is. One batch call fetches gamma exposure for the three index ETFs; a second reads the VIX. The script prints spot, net dealer gamma, the flip level and the call and put walls per symbol, then says which regime each is in: positive gamma damps moves, negative gamma amplifies them.",
+      "returns": "One batch call fetches gamma exposure for the three index ETFs; a second reads the VIX. The script prints spot, net dealer gamma, the flip level and the call and put walls per symbol, then says which regime each is in: positive gamma damps moves, negative gamma amplifies them.",
+      "family": "recipes",
+      "family_name": "Recipes",
+      "docs_url": "https://apexvol.com/developers/recipes/morning-regime-brief",
+      "tools": [
+        {
+          "name": "get_gex",
+          "mode": null
+        },
+        {
+          "name": "get_vix_snapshot",
+          "mode": null
+        }
+      ],
+      "template": "Give me a morning regime brief: dealer gamma flip, call wall and put wall for {ticker}, {ticker_b} and IWM, plus where the VIX is.",
+      "arguments": [
+        {
+          "name": "ticker",
+          "default": "SPY"
+        },
+        {
+          "name": "ticker_b",
+          "default": "QQQ"
+        }
+      ]
+    },
+    {
+      "name": "recipe-earnings-week-straddles",
+      "title": "Earnings-week straddles",
+      "description": "Which large caps report earnings this week, and how does each one's implied move compare with its usual move? Reads the next seven days of the earnings calendar, keeps the largest names, and prints the straddle-implied move beside the historical average move and the ratio between them. A ratio well above one says the market is paying up for the event; well below one says the event is cheap against its own history.",
+      "returns": "Reads the next seven days of the earnings calendar, keeps the largest names, and prints the straddle-implied move beside the historical average move and the ratio between them. A ratio well above one says the market is paying up for the event; well below one says the event is cheap against its own history.",
+      "family": "recipes",
+      "family_name": "Recipes",
+      "docs_url": "https://apexvol.com/developers/recipes/earnings-week-straddles",
+      "tools": [
+        {
+          "name": "get_earnings_calendar",
+          "mode": null
+        },
+        {
+          "name": "calculate_expected_move",
+          "mode": null
+        }
+      ],
+      "template": "Which large caps report earnings this week, and how does each one's implied move compare with its usual move?",
+      "arguments": []
+    },
+    {
+      "name": "recipe-watchlist-iv-rank-screen",
+      "title": "Watchlist IV rank screen",
+      "description": "Rank my watchlist by IV rank and tell me which names are expensive or cheap against their own year: NVDA, AMD, TSLA, AVGO, MU, PLTR, COIN, NFLX, CRWD, SMCI. One batch call returns IV rank, IV percentile and the current 30-day implied vol for up to 25 symbols. The script sorts the list, flags the names above 50 and below 20, and prints what each one's implied vol is against its own year.",
+      "returns": "One batch call returns IV rank, IV percentile and the current 30-day implied vol for up to 25 symbols. The script sorts the list, flags the names above 50 and below 20, and prints what each one's implied vol is against its own year.",
+      "family": "recipes",
+      "family_name": "Recipes",
+      "docs_url": "https://apexvol.com/developers/recipes/watchlist-iv-rank-screen",
+      "tools": [
+        {
+          "name": "get_iv_rank",
+          "mode": null
+        }
+      ],
+      "template": "Rank my watchlist by IV rank and tell me which names are expensive or cheap against their own year: {ticker}, {ticker_b}, TSLA, AVGO, MU, PLTR, COIN, NFLX, CRWD, SMCI.",
+      "arguments": [
+        {
+          "name": "ticker",
+          "default": "NVDA"
+        },
+        {
+          "name": "ticker_b",
+          "default": "AMD"
+        }
+      ]
+    },
+    {
+      "name": "recipe-vrp-ranker",
+      "title": "VRP ranker",
+      "description": "Rank AAPL, MSFT, NVDA, AMD, TSLA and AMZN by volatility risk premium, and tell me which ones only look expensive because of an earnings gap. Calls the volatility risk premium endpoint for each symbol and ranks them by the gap between 30-day implied vol and the realized vol of the last 30 sessions. The ex-earnings realized figure is printed beside it, because one earnings gap in the window can make a cheap name look expensive.",
+      "returns": "Calls the volatility risk premium endpoint for each symbol and ranks them by the gap between 30-day implied vol and the realized vol of the last 30 sessions. The ex-earnings realized figure is printed beside it, because one earnings gap in the window can make a cheap name look expensive.",
+      "family": "recipes",
+      "family_name": "Recipes",
+      "docs_url": "https://apexvol.com/developers/recipes/vrp-ranker",
+      "tools": [
+        {
+          "name": "get_volatility_risk_premium",
+          "mode": null
+        }
+      ],
+      "template": "Rank {ticker}, {ticker_b}, NVDA, AMD, TSLA and AMZN by volatility risk premium, and tell me which ones only look expensive because of an earnings gap.",
+      "arguments": [
+        {
+          "name": "ticker",
+          "default": "AAPL"
+        },
+        {
+          "name": "ticker_b",
+          "default": "MSFT"
+        }
+      ]
+    },
+    {
+      "name": "recipe-zero-dte-levels",
+      "title": "0DTE levels",
+      "description": "Give me today's SPY 0DTE levels: gamma regime, flip, call and put walls, max pain and the expected range. Reads the 0DTE analytics for SPY and prints the levels a day trader marks first: the net gamma regime, the flip level, the call and put walls, max pain, and the one standard deviation range from the at-the-money straddle. It also prints the feed's IV forecast against the implied figure and the historical hit rate of the expected move.",
+      "returns": "Reads the 0DTE analytics for SPY and prints the levels a day trader marks first: the net gamma regime, the flip level, the call and put walls, max pain, and the one standard deviation range from the at-the-money straddle. It also prints the feed's IV forecast against the implied figure and the historical hit rate of the expected move.",
+      "family": "recipes",
+      "family_name": "Recipes",
+      "docs_url": "https://apexvol.com/developers/recipes/zero-dte-levels",
+      "tools": [
+        {
+          "name": "get_zero_dte",
+          "mode": null
+        }
+      ],
+      "template": "Give me today's {ticker} 0DTE levels: gamma regime, flip, call and put walls, max pain and the expected range.",
+      "arguments": [
+        {
+          "name": "ticker",
+          "default": "SPY"
+        }
+      ]
+    },
+    {
+      "name": "recipe-term-structure-watch",
+      "title": "Term structure watch",
+      "description": "Show me the implied vol term structure for SPY, NVDA and TSLA and tell me which one is in backwardation. Fetches the implied vol term structure for each symbol and compares the nearest expiration's at-the-money vol with the furthest one returned. A front month above the back is backwardation, usually an event or stress; the script prints the slope in vol points and per-expiry straddle prices for the first few expirations.",
+      "returns": "Fetches the implied vol term structure for each symbol and compares the nearest expiration's at-the-money vol with the furthest one returned. A front month above the back is backwardation, usually an event or stress; the script prints the slope in vol points and per-expiry straddle prices for the first few expirations.",
+      "family": "recipes",
+      "family_name": "Recipes",
+      "docs_url": "https://apexvol.com/developers/recipes/term-structure-watch",
+      "tools": [
+        {
+          "name": "get_term_structure",
+          "mode": null
+        }
+      ],
+      "template": "Show me the implied vol term structure for {ticker}, {ticker_b} and TSLA and tell me which one is in backwardation.",
+      "arguments": [
+        {
+          "name": "ticker",
+          "default": "SPY"
+        },
+        {
+          "name": "ticker_b",
+          "default": "NVDA"
+        }
+      ]
+    },
+    {
+      "name": "recipe-flow-unusual-today",
+      "title": "Unusual flow today",
+      "description": "What unusual options activity is there in NVDA today, and what is the call versus put premium split? Reads the options flow for one symbol and prints the summary line (call and put volume, premium and the sentiment read) followed by the unusual rows, sorted by premium. Volume far above open interest is what marks a print as unusual; the script shows both so the reader can judge.",
+      "returns": "Reads the options flow for one symbol and prints the summary line (call and put volume, premium and the sentiment read) followed by the unusual rows, sorted by premium. Volume far above open interest is what marks a print as unusual; the script shows both so the reader can judge.",
+      "family": "recipes",
+      "family_name": "Recipes",
+      "docs_url": "https://apexvol.com/developers/recipes/flow-unusual-today",
+      "tools": [
+        {
+          "name": "get_options_flow",
+          "mode": null
+        }
+      ],
+      "template": "What unusual options activity is there in {ticker} today, and what is the call versus put premium split?",
+      "arguments": [
+        {
+          "name": "ticker",
+          "default": "NVDA"
+        }
+      ]
+    },
+    {
+      "name": "recipe-portfolio-greeks-check",
+      "title": "Portfolio Greeks check",
+      "description": "I am long 100 SPY and short one 30-delta put in the nearest monthly expiration. What are my net Greeks, and how does the book do in a 10 percent drop with vol up 50 percent? Builds a two-position book from live quotes (long stock plus a short 30-delta put priced from the chain), posts it to the portfolio Greeks endpoint, then runs the stress tests. The output is the net Greeks, the risk label, and the estimated profit and loss in each crash, rally and vol-shock scenario.",
+      "returns": "Builds a two-position book from live quotes (long stock plus a short 30-delta put priced from the chain), posts it to the portfolio Greeks endpoint, then runs the stress tests. The output is the net Greeks, the risk label, and the estimated profit and loss in each crash, rally and vol-shock scenario.",
+      "family": "recipes",
+      "family_name": "Recipes",
+      "docs_url": "https://apexvol.com/developers/recipes/portfolio-greeks-check",
+      "tools": [
+        {
+          "name": "get_options_by_delta",
+          "mode": null
+        },
+        {
+          "name": "calculate_portfolio_greeks",
+          "mode": null
+        },
+        {
+          "name": "generate_stress_tests",
+          "mode": null
+        }
+      ],
+      "template": "I am long 100 {ticker} and short one 30-delta put in the nearest monthly expiration. What are my net Greeks, and how does the book do in a 10 percent drop with vol up 50 percent?",
+      "arguments": [
+        {
+          "name": "ticker",
+          "default": "SPY"
+        }
+      ]
+    }
+  ]
+}

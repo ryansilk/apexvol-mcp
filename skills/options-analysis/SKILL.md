@@ -5,7 +5,7 @@ description: Analyze options and volatility with live ApexVol data — IV rank, 
 
 # Options Analysis with ApexVol
 
-You have access to 43 ApexVol tools for live options analytics. This skill
+You have access to 44 ApexVol tools for live options analytics. This skill
 tells you which tools to combine for common analyses and how to interpret
 the numbers.
 

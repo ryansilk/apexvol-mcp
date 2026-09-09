@@ -4,7 +4,7 @@
 [![Python](https://img.shields.io/pypi/pyversions/apexvol-mcp)](https://pypi.org/project/apexvol-mcp/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-A Model Context Protocol (MCP) server that gives AI assistants live access to ApexVol's options analytics platform: options chains, IV rank, volatility risk premium, Greeks, gamma exposure (GEX), expected moves, strategy building, and market screening. **43 tools**, one connector.
+A Model Context Protocol (MCP) server that gives AI assistants live access to ApexVol's options analytics platform: options chains, IV rank, volatility risk premium, Greeks, gamma exposure (GEX), expected moves, strategy building, and market screening. **44 tools**, one connector.
 
 Works with Claude Code, Claude Desktop, claude.ai (remote connector — no install), and any MCP-compatible client.
 
@@ -85,6 +85,7 @@ The local server runs on your machine and calls the ApexVol platform API. The re
 ## Features
 
 - **43 Analytics Tools** — every `/api/mcp/data` endpoint is reachable from Claude
+- **Built-in reference** — a `help` tool answers "which tool gives me X" from a bundled copy of the API docs, and 41 prompts appear in your client's prompt picker: 33 starters, three per data family, plus 8 whole-job recipes
 - **Natural Language Interface** - Ask questions like "What's the IV rank for SPY?"
 - **Remote or local** - hosted OAuth connector, or a pipx-installed stdio server
 - **Token Authentication** - Secure API token validation (local mode)
@@ -97,11 +98,11 @@ The local server runs on your machine and calls the ApexVol platform API. The re
 - `get_expirations` - Available expiration dates
 - `get_options_by_delta` - Find options at specific delta
 - `get_stock_price` - Current price and company info
-- `calculate_expected_move` - Expected move from straddle pricing
+- `calculate_expected_move` - Expected move from straddle pricing; `tickers="SPY,AAPL,NVDA"` prices up to 25 symbols in one call (0.1.4)
 - `get_historical_chain` - Chain snapshot on any past trading day
 
 ### Volatility Analysis (7 tools)
-- `get_iv_rank` - IV rank and percentile
+- `get_iv_rank` - IV rank and percentile; `tickers="SPY,QQQ,IWM"` ranks up to 25 symbols in one call (0.1.4)
 - `get_volatility_cone` - IV vs historical realized volatility
 - `get_volatility_risk_premium` - VRP (IV minus RV)
 - `get_term_structure` - IV across expirations
@@ -110,14 +111,14 @@ The local server runs on your machine and calls the ApexVol platform API. The re
 - `get_monies_surface` - Smoothed vol surface: implied, forecast, or model-vs-market comparison
 
 ### Greeks & GEX (5 tools)
-- `get_gex` - Gamma Exposure by strike
+- `get_gex` - Gamma Exposure by strike; `tickers=` batches up to 25 symbols, `strikes_around` and `detail` size the payload (0.1.4)
 - `get_charm_exposure` - Delta decay exposure
 - `get_third_order_greeks` - Speed, zomma, color, vomma, ultima
 - `get_greeks_heatmap` - Greeks across strikes and expirations
 - `get_cross_index_gex` - Compare GEX across indices
 
 ### Options Flow (3 tools)
-- `get_options_flow` - Flow and unusual activity (end-of-day figures while the market is closed; answers with an explanation, never zeros, if the volume feed goes quiet)
+- `get_options_flow` - Flow and unusual activity (end-of-day figures while the market is closed; answers with an explanation, never zeros, if the volume feed goes quiet); `limit` and `detail` size the row lists (0.1.4)
 - `get_smart_money_flow` - Institutional flow patterns ⚠️ *same limitation as above*
 - `scan_volatility_arb` - Cross-index volatility arbitrage
 
@@ -153,10 +154,26 @@ text ("AAPL 100 shares") works for stock-only portfolios.
   `expected_vs_actual`, `verdict`, `seasonality`, `post_drift`, `iv_crush`
 - `get_max_pain` - Max pain strike and loss profile
 - `get_volume_profile` - Volume/OI by strike with OI-implied support/resistance
-- `get_zero_dte` - 0DTE gamma, flip level, max pain, theta decay (SPY/QQQ/SPX…)
+- `get_zero_dte` - 0DTE gamma, flip level, max pain, theta decay (SPY/QQQ/SPX...); `strikes_around` and `detail` size the chain (0.1.4)
 - `get_orats_cores` - Raw vendor cores row (340+ fields) with field selection
 - `search_tickers` - Resolve names to symbols / check coverage
 - `scan_relative_value` - Market-wide IV/SPY mean-reversion and pairs scans
+
+### Help and discovery (1 tool)
+- `help` - The API reference inside the server. `help()` lists the families
+  and how to ask; `help("get_iv_rank")`, `help("gex")` or
+  `help("/iv-rank/{ticker}")` return the tool, family or endpoint record
+  (question, parameters, units, basis, fields, plan, prompts, docs URL); any
+  other words run a search. Bundled data, no request cost, works before a
+  token is set.
+
+## Prompt starters
+
+The server also registers 41 prompts, three per data family plus one per recipe, that show up in
+the prompt picker of Claude Desktop, Cursor and VS Code. Each one carries the
+ticker as an argument with a real default, names the tools that answer it
+and links the family page. The wording matches the
+[prompt library](https://apexvol.com/mcp/prompts).
 
 ## Installation (local mode, in detail)
 

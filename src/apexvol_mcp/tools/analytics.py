@@ -406,7 +406,11 @@ def register_tools(mcp: FastMCP):
             return {"success": False, "error": str(e)}
 
     @mcp.tool(**read_only('0DTE Analytics'))
-    async def get_zero_dte(ticker: str) -> dict:
+    async def get_zero_dte(
+        ticker: str,
+        strikes_around: Optional[int] = None,
+        detail: Optional[str] = None
+    ) -> dict:
         """
         Get 0DTE (same-day expiration) analytics for a ticker.
 
@@ -421,13 +425,21 @@ def register_tools(mcp: FastMCP):
 
         Args:
             ticker: Stock symbol with 0DTE listings (e.g., "SPY")
+            strikes_around: Strikes kept each side of spot in by_strike and
+                chain_table (server default 15); 0 keeps every strike.
+            detail: "compact" (default) or "full" for the whole chain.
 
         Returns:
             0DTE analytics payload
         """
         try:
             client = get_client()
-            result = await client.get(f"/zero-dte/{ticker.upper()}")
+            params = {}
+            if strikes_around is not None:
+                params['strikes_around'] = int(strikes_around)
+            if detail in ('compact', 'full'):
+                params['detail'] = detail
+            result = await client.get(f"/zero-dte/{ticker.upper()}", params=params or None)
 
             return {
                 "success": True,

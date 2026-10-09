@@ -16,13 +16,15 @@ Works with Claude Code, Claude Desktop, claude.ai (remote connector — no insta
 
 ### Option A — Remote connector (no install)
 
-Add a custom connector in claude.ai or Claude Desktop (**Settings → Connectors → Add custom connector**) with this URL:
+ApexVol is listed in Claude's connector directory: open **https://claude.ai/directory/apexvol** (or **Customize → Connectors → Discover** in claude.ai or Claude Desktop and search for ApexVol), then select **Connect to Claude**.
+
+Sign in with your ApexVol account when prompted (OAuth). That's it — no Python, no config files.
+
+To add it by hand instead (or in another MCP client), use this URL as a custom connector:
 
 ```
 https://apexvol.com/mcp-server
 ```
-
-Sign in with your ApexVol account when prompted (OAuth). That's it — no Python, no config files.
 
 Claude Code can use the remote server too:
 
@@ -258,7 +260,7 @@ Or add to your project's `.mcp.json` or global `~/.claude.json` by hand:
 }
 ```
 
-(Claude Desktop also supports the remote connector under Settings → Connectors — see Quickstart Option A.)
+(Claude Desktop also supports the remote connector from Claude's connector directory — see Quickstart Option A.)
 
 ### Environment Variables
 
